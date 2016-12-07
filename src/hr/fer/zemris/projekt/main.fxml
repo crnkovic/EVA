@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
@@ -20,10 +19,10 @@
                 <!--> onMouseReleased for no preview when dragging<!-->
                 <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected" onMouseReleased="#newFrameSelected" prefHeight="15.0" HBox.hgrow="ALWAYS" />
                 <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden" />
-                <!--> Mozda dodat label: "Frame:" <!-->
-                <Label fx:id="frameNumberField" disable="true" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
+                <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:" />
+                <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
                 <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden" />
-                <Button fx:id="saveMarksButton" disable="true" mnemonicParsing="false" prefHeight="18.0" text="Spremi oznake" />
+                <Button fx:id="saveMarksButton" onAction="#saveMarks" mnemonicParsing="false" prefHeight="18.0" text="Spremi oznake" />
             </children>
         </HBox>
     </bottom>
@@ -52,38 +51,39 @@
             <children>
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
-                        <Label disable="true" layoutY="-6.0" prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0" />
-                        <TextField disable="true" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
+                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0" />
+                        <TextField fx:id="jaccardovIndex" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
-                <Button fx:id="evaluateButton" disable="true" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
+                <Button fx:id="evaluateButton"  mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
-                        <Label disable="true" layoutY="-6.0" prefHeight="40.0" prefWidth="67.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
-                        <Label disable="true" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
-                    </children>
-                </AnchorPane>
-                <AnchorPane prefHeight="28.0" prefWidth="200.0">
-                    <children>
-                        <Label disable="true" layoutY="-6.0" prefHeight="40.0" prefWidth="67.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
-                        <Label disable="true" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="52.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
+                        <Label fx:id="recallValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
-                        <Label disable="true" layoutY="-6.0" prefHeight="40.0" prefWidth="67.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
-                        <Label disable="true" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="84.0" text="Preciznost: " AnchorPane.leftAnchor="0.0" />
+                        <Label fx:id="precisionValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+                    </children>
+                </AnchorPane>
+                <AnchorPane prefHeight="28.0" prefWidth="200.0">
+                    <children>
+                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="73.0" text="F1 mjera: " AnchorPane.leftAnchor="0.0" />
+                        <Label fx:id="f1Value"  layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
                 <AnchorPane prefHeight="18.0" prefWidth="200.0">
                     <children>
-                        <Button disable="true" layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0" text="Više informacija" AnchorPane.rightAnchor="0.0" />
+                        <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
+                        <Button  layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0" text="Više informacija" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
 
 
                 <!-->Add action for selected frame<!-->
-                <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" />
+                <ListView fx:id="markedFramesList" VBox.vgrow="ALWAYS" prefHeight="200.0" prefWidth="200.0" />
             </children>
         </VBox>
     </right>

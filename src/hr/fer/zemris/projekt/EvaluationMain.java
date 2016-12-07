@@ -10,6 +10,7 @@ import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EvaluationMain extends Application {
@@ -18,7 +19,7 @@ public class EvaluationMain extends Application {
 	private File dumpDir = null;
 	private File evaluationFile = null;
 	Controller controller;
-	private Map<Integer, MarkedFrame> markedFrames;
+	private Map<Integer, List<MarkedRectangle>> markedFrames;
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -97,6 +98,14 @@ public class EvaluationMain extends Application {
 
 	public File getEvaluationFile() {
 		return evaluationFile;
+	}
+
+	public Map<Integer, List<MarkedRectangle>> getMarkedFrames() {
+		return markedFrames;
+	}
+
+	public List<MarkedRectangle> getMarkedFrame(int frameNumber){
+		return markedFrames.get(frameNumber);
 	}
 
 	public void setEvaluationFile(File evaluationFile) {

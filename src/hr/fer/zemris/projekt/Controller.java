@@ -6,7 +6,6 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Slider;
@@ -27,7 +26,6 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
 	private Scene scene;
 	private EvaluationMain evaluationMainApp;
-	private boolean fistRun = true;
 	private static final int FRAME_HOP = 15;
 	@FXML
 	private Label frameNumberField;
@@ -35,10 +33,6 @@ public class Controller implements Initializable {
 	private Slider frameSlider;
 	@FXML
 	private ImageView footballFieldImage;
-	@FXML
-	private Button saveMarksButton;
-	@FXML
-	private Button evaluateButton;
 	@FXML
 	private ListView markedFramesList;
 
@@ -93,17 +87,16 @@ public class Controller implements Initializable {
 		evaluationMainApp.setVideoPath(file.getPath());
 		int numberOfFrames = VideoUtil.getNumberOfFrames(file.getPath());
 
-		frameSlider.setMax(numberOfFrames/ FRAME_HOP);
+		frameSlider.setMax(numberOfFrames / FRAME_HOP);
 		frameSlider.setMin(0);
 		frameSlider.setBlockIncrement(50);
 
-		defaultSetUp();
+		evaluationMainApp.setEvaluationFile(null);
 
-		reset();
-	}
-
-	private void reset() {
-		//TODO: brise sve statare slike, brise listu oznacenih slika, brize file oznacenih slika
+		if(evaluationMainApp.isDumpFolderSet()){
+			setSelectedFrame(0);
+			frameSlider.setDisable(false);
+		}
 	}
 
 	@FXML
@@ -114,21 +107,12 @@ public class Controller implements Initializable {
 		file = file.toPath().resolve("images").toFile();
 		file.mkdir();
 		evaluationMainApp.setDumpDir(file);
-
-		defaultSetUp();
-
-	}
-
-	private void defaultSetUp() throws IOException, JCodecException {
-		if (evaluationMainApp.isDumpFolderSet() && evaluationMainApp.isVideoDirSet()) {
-			if(fistRun){
-			saveMarksButton.setDisable(false);
-			frameSlider.setDisable(false);
-			frameNumberField.setDisable(false);
-			fistRun = false;}
+		if(evaluationMainApp.isVideoDirSet()){
 			setSelectedFrame(0);
+			frameSlider.setDisable(false);
 		}
 	}
+
 
 
 	@FXML
@@ -137,14 +121,15 @@ public class Controller implements Initializable {
 		fileChooser.setTitle("Odaberi datoteku za evaluaciju");
 		File file = fileChooser.showOpenDialog(scene.getWindow());
 		evaluationMainApp.setEvaluationFile(file);
-		if(evaluationMainApp.isVideoDirSet() && evaluationMainApp.isDumpFolderSet() ){
-			evaluateButton.setDisable(false);
-		}
 	}
+
 
 	@FXML
 	public void evaluate(ActionEvent actionEvent) {
-		//TODO
+		//TODO check first if you can evaluate
+		if(evaluationMainApp.getMarkedFrames().size() == 0){
+			//TODO throw warning that there should be frames that are marked
+		}
 	}
 
 	public void saveCurrentFrame(ActionEvent actionEvent) {
@@ -154,5 +139,8 @@ public class Controller implements Initializable {
 	}
 
 	public void saveCurrentFrameWithMarks(ActionEvent actionEvent) {
+	}
+
+	public void saveMarks(ActionEvent actionEvent) {
 	}
 }
