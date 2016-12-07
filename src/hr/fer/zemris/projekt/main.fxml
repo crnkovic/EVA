@@ -30,15 +30,18 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
-                <Menu mnemonicParsing="false" text="Video">
+                <Menu mnemonicParsing="false" text="Postavke">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberi video" />
-                    </items>
-                    <items>
-                        <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberi direktorij za slike" />
-                    </items>
-                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberi direktorij za frameove" />
                         <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberi datoteku za evaluaciju" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Spremanje">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frame" />
+                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrameWithMarks" text="Spremi frame s oznakama" />
+                        <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi datoteku s oznakama" />
                     </items>
                 </Menu>
             </menus>

@@ -37,7 +37,9 @@ public class EvaluationMain extends Application {
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent event) {
-				removeDumpDir();
+				if (dumpDir != null) {
+					removeDumpDir();
+				}
 			}
 		});
 
@@ -79,7 +81,7 @@ public class EvaluationMain extends Application {
 	}
 
 	public void setDumpDir(File dumpDir) {
-		if(this.dumpDir !=null){
+		if (this.dumpDir != null) {
 			removeDumpDir();
 		}
 		this.dumpDir = dumpDir;

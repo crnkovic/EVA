@@ -146,4 +146,13 @@ public class Controller implements Initializable {
 	public void evaluate(ActionEvent actionEvent) {
 		//TODO
 	}
+
+	public void saveCurrentFrame(ActionEvent actionEvent) {
+	}
+
+	public void saveFileWithMarks(ActionEvent actionEvent) {
+	}
+
+	public void saveCurrentFrameWithMarks(ActionEvent actionEvent) {
+	}
 }
