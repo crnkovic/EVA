@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="746.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.fer.zemris.projekt.Controller">
+   <center>
+      <Pane>
+         <children>
+            <ImageView fx:id="footballFieldImage" fitHeight="488.0" fitWidth="700.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+              </ImageView>
+         </children>
+      </Pane>
+   </center>
+   <bottom>
+      <HBox alignment="CENTER">
+         <children>
+             <!--> onMouseReleased for no preview when dragging<!-->
+             <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected" onMouseReleased="#newFrameSelected" prefHeight="15.0" HBox.hgrow="ALWAYS" />
+            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden" />
+             <!--> Mozda dodat label: "Frame:" <!-->
+             <Label fx:id="frameNumberField" disable="true" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
+            <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden" />
+             <Button fx:id="saveMarksButton" disable="true" mnemonicParsing="false" prefHeight="18.0" text="Spremi oznake" />
+            </children>
+      </HBox>
+   </bottom>
+   <top>
+      <MenuBar BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" text="Video">
+              <items>
+              <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberi video" />
+              </items>
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberi direktorij za slike" />
+              </items>
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberi datoteku za evaluaciju" />
+              </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+   <right>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="evaluateButton" disable="true" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="83.0" text="Evaluiraj" />
+            <!-->Add action for selected frame<!-->
+             <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" />
+         </children>
+      </VBox>
+   </right>
+
+</BorderPane>
