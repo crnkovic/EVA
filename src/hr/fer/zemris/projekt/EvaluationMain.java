@@ -19,10 +19,12 @@ public class EvaluationMain extends Application {
 	private File dumpDir = null;
 	private File evaluationFile = null;
 	Controller controller;
+	Stage primaryStage;
 	private Map<Integer, List<MarkedRectangle>> markedFrames;
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		this.primaryStage = primaryStage;
 		markedFrames = new HashMap<>();
 
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
@@ -111,5 +113,6 @@ public class EvaluationMain extends Application {
 	public void setEvaluationFile(File evaluationFile) {
 		this.evaluationFile = evaluationFile;
 	}
+
 }
 

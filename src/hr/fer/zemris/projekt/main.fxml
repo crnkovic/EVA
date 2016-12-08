@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.fer.zemris.projekt.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.fer.zemris.projekt.Controller">
     <center>
         <Pane>
             <children>
-                <ImageView fx:id="footballFieldImage" fitHeight="488.0" fitWidth="700.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+                <ImageView fx:id="footballFieldImage" fitHeight="300.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
                 </ImageView>
+
             </children>
         </Pane>
     </center>
@@ -22,7 +24,7 @@
                 <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:" />
                 <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
                 <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden" />
-                <Button fx:id="saveMarksButton" onAction="#saveMarks" mnemonicParsing="false" prefHeight="18.0" text="Spremi oznake" />
+                <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0" text="Spremi oznake" />
             </children>
         </HBox>
     </bottom>
@@ -55,7 +57,7 @@
                         <TextField fx:id="jaccardovIndex" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
-                <Button fx:id="evaluateButton"  mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
+                <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
                         <Label layoutY="-6.0" prefHeight="40.0" prefWidth="52.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
@@ -71,19 +73,19 @@
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
                         <Label layoutY="-6.0" prefHeight="40.0" prefWidth="73.0" text="F1 mjera: " AnchorPane.leftAnchor="0.0" />
-                        <Label fx:id="f1Value"  layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+                        <Label fx:id="f1Value" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
                 <AnchorPane prefHeight="18.0" prefWidth="200.0">
                     <children>
                         <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
-                        <Button  layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0" text="Više informacija" AnchorPane.rightAnchor="0.0" />
+                        <Button layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0" text="Više informacija" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
 
 
                 <!-->Add action for selected frame<!-->
-                <ListView fx:id="markedFramesList" VBox.vgrow="ALWAYS" prefHeight="200.0" prefWidth="200.0" />
+                <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
             </children>
         </VBox>
     </right>
