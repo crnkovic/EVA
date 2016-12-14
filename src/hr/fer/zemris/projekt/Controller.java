@@ -35,6 +35,12 @@ public class Controller implements Initializable {
 	private ImageView footballFieldImage;
 	@FXML
 	private ListView markedFramesList;
+	@FXML
+	private Label recallValue;
+	@FXML
+	private Label precisionValue;
+	@FXML
+	private Label f1Value;
 
 	public void setUp(Scene scene, EvaluationMain evaluationMain) {
 		this.scene = scene;
