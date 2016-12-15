@@ -6,17 +6,18 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import org.bytedeco.javacpp.presets.opencv_core;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
-import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.BooleanSupplier;
 
 public class Controller implements Initializable {
 	private Scene scene;
@@ -63,15 +63,24 @@ public class Controller implements Initializable {
 
 	@FXML
 	public void newFrameSelected(Event event) throws IOException, JCodecException {
-		Slider slider = (Slider) event.getSource();
-		long frame = Math.round(slider.getValue());
-		setSelectedFrame((int) frame);
+		int frameNumber = setLabelForSliderValue();
+		setSelectedFrame(frameNumber);
+	}
+
+	private int getRealFrameNumberForSliderValue(long frame) {
+		return (int) (FRAME_HOP * frame) + 1;
 	}
 
 	public void setSelectedFrame(int number) throws IOException, JCodecException {
-		int frameNumber = FRAME_HOP * number;
-		frameNumberField.setText(String.valueOf(frameNumber));
+		BufferedImage fieldImage = getImageForFrame(number);
+		Image image = SwingFXUtils.toFXImage(fieldImage, null);
+		footballFieldImage.setImage(image);
 
+		//TODO: add marked rectangles
+	}
+
+	public BufferedImage getImageForFrame(int number) throws IOException, JCodecException {
+		int frameNumber = number-1;
 		File frameFile = evaluationMainApp.getDumpDir().toPath().resolve(frameNumber + ".png").toFile();
 		BufferedImage fieldImage;
 		if (frameFile.exists()) {
@@ -80,11 +89,7 @@ public class Controller implements Initializable {
 			fieldImage = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), frameNumber);
 			ImageIO.write(fieldImage, "png", frameFile);
 		}
-
-		Image image = SwingFXUtils.toFXImage(fieldImage, null);
-		footballFieldImage.setImage(image);
-
-		//TODO: add marked rectangles
+		return fieldImage;
 	}
 
 	@FXML
@@ -144,6 +149,7 @@ public class Controller implements Initializable {
 			//TODO throw warning that there should be marked frames
 			return;
 		}
+
 		int truePositives=0;
 		int falsePositives=0;
 		int falseNegatives=0;
@@ -222,15 +228,43 @@ public class Controller implements Initializable {
 		return rectangles;
 	}
 
+	@FXML
 	public void saveCurrentFrame(ActionEvent actionEvent) {
 	}
 
+	@FXML
 	public void saveFileWithMarks(ActionEvent actionEvent) {
 	}
 
-	public void saveCurrentFrameWithMarks(ActionEvent actionEvent) {
+	@FXML
+	public void saveMarks(ActionEvent actionEvent) {
 	}
 
-	public void saveMarks(ActionEvent actionEvent) {
+	@FXML
+	public void setFrameNumberInLabel(Event event) {
+		setLabelForSliderValue();
+	}
+
+	/**
+	 * Sets the label next to the slider depending on the slider position.
+	 * @return selected frame with the slider position
+	 */
+	public int setLabelForSliderValue(){
+		long frame = Math.round(frameSlider.getValue());
+		int frameNumber = getRealFrameNumberForSliderValue(frame);
+		frameNumberField.setText(String.valueOf(frameNumber));
+		return frameNumber;
+	}
+
+	@FXML
+	public void setMarkedFramesFile(ActionEvent actionEvent) {
+	}
+
+	@FXML
+	public void markFromGivenFile(ActionEvent actionEvent) {
+	}
+
+	@FXML
+	public void markFromEvaluation(ActionEvent actionEvent) {
 	}
 }

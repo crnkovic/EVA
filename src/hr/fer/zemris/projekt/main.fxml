@@ -18,8 +18,9 @@
     <bottom>
         <HBox alignment="CENTER">
             <children>
+          
                 <!--> onMouseReleased for no preview when dragging<!-->
-                <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected" onMouseReleased="#newFrameSelected" prefHeight="15.0" HBox.hgrow="ALWAYS" />
+                <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected" onMouseDragged="#setFrameNumberInLabel" onMouseReleased="#newFrameSelected" prefHeight="15.0" HBox.hgrow="ALWAYS" />
                 <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden" />
                 <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:" />
                 <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
@@ -36,12 +37,12 @@
                         <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberi video" />
                         <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberi direktorij za frameove" />
                         <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberi datoteku za evaluaciju" />
+                        <MenuItem mnemonicParsing="false" onAction="#setMarkedFramesFile" text="Odaberi datoteku s oznakama" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Spremanje">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frame" />
-                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrameWithMarks" text="Spremi frame s oznakama" />
+                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frameove" />
                         <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi datoteku s oznakama" />
                     </items>
                 </Menu>
@@ -58,10 +59,11 @@
                     </children>
                 </AnchorPane>
                 <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
-                <AnchorPane prefHeight="28.0" prefWidth="200.0">
+                <AnchorPane prefHeight="34.0" prefWidth="179.0">
                     <children>
                         <Label layoutY="-6.0" prefHeight="40.0" prefWidth="52.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
                         <Label fx:id="recallValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+
                     </children>
                 </AnchorPane>
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
@@ -86,6 +88,9 @@
 
                 <!-->Add action for selected frame<!-->
                 <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+                <!-- > Bolji nazivi i jel to dobro mjesto O.o  DODAJ U CHECK BOX KAO MENU !!! NEMAM VREMENA SAD AAAA<!-->
+            <Button mnemonicParsing="false" prefHeight="26.0" onAction="#markFromEvaluation" prefWidth="211.0" text="Označi iz evaluacije" />
+            <Button mnemonicParsing="false" prefHeight="26.0" onAction="#markFromGivenFile" prefWidth="282.0" text="Označi iz datoteke" />
             </children>
         </VBox>
     </right>

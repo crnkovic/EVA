@@ -56,12 +56,14 @@ public class MarkedRectangle {
 
 	@Override
 	public String toString() {
-		String s = "Frame:" + frameNumber + ", xCoordinate: " + xCoordinate + ", yCoordinate: " + yCoordinate + ", Width:" + width + ", Height:" + height;
-		return s;
+		StringBuilder builder = new StringBuilder();
+		builder.append(frameNumber).append(",").append(xCoordinate).append(",").append(yCoordinate).append(",").append(width).append(",").append(height);
+		return builder.toString();
 	}
 
 
-	/** Returns the Jaccard's index value for two rectangles.
+	/**
+	 *  Returns the Jaccard's index value for two rectangles.
 	 *  Jaccard value is calculated as intersection area divided by union area of the two rectangles
 	 */
 	public float jaccardsIndex(MarkedRectangle rect){
