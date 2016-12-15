@@ -6,22 +6,26 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import org.bytedeco.javacpp.presets.opencv_core;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
+import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.BooleanSupplier;
 
 public class Controller implements Initializable {
 	private Scene scene;
@@ -41,6 +45,8 @@ public class Controller implements Initializable {
 	private Label precisionValue;
 	@FXML
 	private Label f1Value;
+	@FXML
+	private TextField jaccardovIndex;
 
 	public void setUp(Scene scene, EvaluationMain evaluationMain) {
 		this.scene = scene;
@@ -132,10 +138,88 @@ public class Controller implements Initializable {
 
 	@FXML
 	public void evaluate(ActionEvent actionEvent) {
+
 		//TODO check first if you can evaluate
 		if(evaluationMainApp.getMarkedFrames().size() == 0){
-			//TODO throw warning that there should be frames that are marked
+			//TODO throw warning that there should be marked frames
+			return;
 		}
+		int truePositives=0;
+		int falsePositives=0;
+		int falseNegatives=0;
+
+		for(int frameNumber : evaluationMainApp.getMarkedFrames().keySet()){
+
+			List<MarkedRectangle> groundTruthFrame = evaluationMainApp.getMarkedFrames().get(frameNumber);
+			List<MarkedRectangle> notusedGeneratorRectangles = rectanglesForAFrame(frameNumber);
+			for (MarkedRectangle groundTruthRectangle: groundTruthFrame) {
+
+				for (MarkedRectangle generatorRectangle : notusedGeneratorRectangles) {
+					MarkedRectangle usedRectangle=null;
+					boolean hit = false;
+					if(generatorRectangle.jaccardsIndex(groundTruthRectangle) > Float.parseFloat(jaccardovIndex.getText())){
+						//hit
+						usedRectangle=generatorRectangle;
+						hit = true;
+						break;
+					}
+					if(hit){
+						notusedGeneratorRectangles.remove(usedRectangle);
+						hit=false;
+						truePositives++;
+					}else{
+						falseNegatives++;
+					}
+				}
+
+			}
+			falsePositives=notusedGeneratorRectangles.size();
+		}
+		float recall = (float) truePositives/(truePositives+falseNegatives);
+		recallValue.setText(String.valueOf(recall)+"%");
+
+		float precision = (float) truePositives/(truePositives+falsePositives);
+		precisionValue.setText(String.valueOf(precision)+"%");
+
+		float f1 = 2 * (recall*precision)/(recall+precision);
+		f1Value.setText(String.valueOf(f1)+"%");
+	}
+
+	public LinkedList<MarkedRectangle> rectanglesForAFrame(int numberOfFrame){
+		LinkedList<MarkedRectangle> rectangles = new LinkedList<>();
+		try {
+			Files.lines(evaluationMainApp.getEvaluationFile().toPath())
+					.filter(line -> line.startsWith(Integer.toString(numberOfFrame) + ","))
+					.forEach(line -> {
+						String[] polje = line.split(",");
+						/*
+						polje{
+							brojFramea,
+							ID tima,
+							ID igraca,
+							x koordinata u terenu,
+							y koordinata u terenu,
+							x koordinata LD vrha pravokutnika,
+							y koordinata LD vrha,
+							sirina pravokutnika,
+							visina pravokutnika,
+							zanemariva oznaka
+						}
+						*/
+						rectangles.add(
+								new MarkedRectangle(
+										numberOfFrame,
+										Integer.parseInt(polje[5]),
+										Integer.parseInt(polje[6]),
+										Integer.parseInt(polje[7]),
+										Integer.parseInt(polje[8])
+								));
+					}
+				);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return rectangles;
 	}
 
 	public void saveCurrentFrame(ActionEvent actionEvent) {

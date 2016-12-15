@@ -53,4 +53,28 @@ public class MarkedRectangle {
 	public void setHeight(int height) {
 		this.height = height;
 	}
+
+	@Override
+	public String toString() {
+		String s = "Frame:" + frameNumber + ", xCoordinate: " + xCoordinate + ", yCoordinate: " + yCoordinate + ", Width:" + width + ", Height:" + height;
+		return s;
+	}
+
+
+	/** Returns the Jaccard's index value for two rectangles.
+	 *  Jaccard value is calculated as intersection area divided by union area of the two rectangles
+	 */
+	public float jaccardsIndex(MarkedRectangle rect){
+		int newX = Math.max(this.xCoordinate, rect.xCoordinate);
+		int newY = Math.min(this.yCoordinate, rect.yCoordinate);
+		int newWidth = Math.min(this.xCoordinate + this.width, rect.xCoordinate + rect.width) - newX;
+		int newHeight = Math.max(this.yCoordinate + this.height, rect.yCoordinate + rect.height) - newY;
+
+		int intersectionArea = newWidth*newHeight;
+
+		int unionArea = this.height*this.width + rect.height*rect.width - intersectionArea;
+
+		return (float)intersectionArea/unionArea;
+	}
+
 }
