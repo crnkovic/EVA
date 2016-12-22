@@ -20,7 +20,7 @@ public class EvaluationMain extends Application {
 	private File evaluationFile = null;
 	Controller controller;
 	Stage primaryStage;
-	private Map<Integer, List<MarkedRectangle>> markedFrames;
+	private Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames;
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -102,11 +102,11 @@ public class EvaluationMain extends Application {
 		return evaluationFile;
 	}
 
-	public Map<Integer, List<MarkedRectangle>> getMarkedFrames() {
+	public Map<Integer, List<javafx.scene.shape.Rectangle>> getMarkedFrames() {
 		return markedFrames;
 	}
 
-	public List<MarkedRectangle> getMarkedFrame(int frameNumber){
+	public List<javafx.scene.shape.Rectangle> getMarkedFrame(int frameNumber){
 		return markedFrames.get(frameNumber);
 	}
 
