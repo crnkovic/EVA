@@ -81,6 +81,7 @@ public class Controller implements Initializable {
 				beginningY = mouseEvent.getY();
 				set = true;
 				System.out.println("mouse click detected! " + mouseEvent.getX());
+				System.out.println(mouseEvent.getY());
 			}
 		});
 
@@ -262,32 +263,38 @@ public class Controller implements Initializable {
 
 		for (int frameNumber : evaluationMainApp.getMarkedFrames().keySet()) {
 
-			List<javafx.scene.shape.Rectangle> groundTruthFrame = evaluationMainApp.getMarkedFrames().get(frameNumber);
-			List<javafx.scene.shape.Rectangle> notusedGeneratorRectangles = rectanglesForAFrame(frameNumber);
-			for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthFrame) {
+			List<javafx.scene.shape.Rectangle> groundTruthRectangles = evaluationMainApp.getMarkedFrames().get(frameNumber);
+			List<javafx.scene.shape.Rectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
+			falseNegatives+= detectedRectangles.size();
 
-				for (javafx.scene.shape.Rectangle generatorRectangle : notusedGeneratorRectangles) {
-					javafx.scene.shape.Rectangle usedRectangle = null;
-					boolean hit = false;
+			for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
+				boolean hit = false;
+				javafx.scene.shape.Rectangle usedRectangle = null;
+
+				for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
 					if (jaccardsIndex(generatorRectangle,groundTruthRectangle) > Float.parseFloat(jaccardovIndex
 							.getText())) {
 						//hit
 						usedRectangle = generatorRectangle;
 						hit = true;
+						truePositives++;
+						falseNegatives--;
 						break;
 					}
-					if (hit) {
-						notusedGeneratorRectangles.remove(usedRectangle);
-						hit = false;
-						truePositives++;
-					} else {
-						falseNegatives++;
-					}
+
 				}
 
+				if (!hit) {
+					falsePositives++;
+				}
 			}
-			falsePositives = notusedGeneratorRectangles.size();
+
+
 		}
+		System.out.println(truePositives);
+		System.out.println(falsePositives);
+		System.out.println(falseNegatives);
+
 		float recall = (float) truePositives / (truePositives + falseNegatives);
 		recallValue.setText(String.valueOf(recall) + "%");
 
@@ -298,16 +305,19 @@ public class Controller implements Initializable {
 		f1Value.setText(String.valueOf(f1) + "%");
 	}
 
-	public static double jaccardsIndex(javafx.scene.shape.Rectangle firstRectangle, javafx.scene.shape.Rectangle secondRectangle){
-		double newX = Math.max(firstRectangle.getX(), secondRectangle.getX());
-		double newY = Math.min(firstRectangle.getY(), secondRectangle.getY());
-		double newWidth = Math.min(firstRectangle.getX() + firstRectangle.getWidth(), secondRectangle.getX() + secondRectangle.getWidth()) - newX;
-		double newHeight = Math.max(firstRectangle.getY() + firstRectangle.getY(), secondRectangle.getY() + secondRectangle.getHeight()) - newY;
+	public static double jaccardsIndex(javafx.scene.shape.Rectangle firstRectangle, javafx.scene.shape.Rectangle groundTruthRectangle){
+
+		double newX = Math.max(firstRectangle.getX(), groundTruthRectangle.getX());
+		double newY = Math.min(firstRectangle.getY(), groundTruthRectangle.getY());
+		double newWidth = Math.min(firstRectangle.getX() + firstRectangle.getWidth(), groundTruthRectangle.getX() + groundTruthRectangle.getWidth()) - newX;
+		double newHeight = Math.max(firstRectangle.getY() + firstRectangle.getY(), groundTruthRectangle.getY() + groundTruthRectangle.getHeight()) - newY;
+		System.out.println(newHeight);
+		System.out.println(newWidth);
 
 		double intersectionArea = newWidth*newHeight;
-
-		double unionArea = firstRectangle.getHeight()*firstRectangle.getWidth()+ secondRectangle.getHeight()*secondRectangle.getWidth()- intersectionArea;
-
+		System.out.println(intersectionArea);
+		double unionArea = firstRectangle.getHeight()*firstRectangle.getWidth()+ groundTruthRectangle.getHeight()*groundTruthRectangle.getWidth()- intersectionArea;
+		System.out.println(unionArea);
 		return intersectionArea/unionArea;
 	}
 

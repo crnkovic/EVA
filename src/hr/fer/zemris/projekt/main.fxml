@@ -9,7 +9,7 @@
     <left>
         <Pane fx:id="imagePane">
             <children>
-                      <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="900.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+                      <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
                 </ImageView>
             </children>
         </Pane>

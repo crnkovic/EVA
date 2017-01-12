@@ -7,8 +7,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import org.jcodec.api.JCodecException;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,7 @@ public class EvaluationMain extends Application {
 	private String videoPath = null;
 	private File dumpDir = null;
 	private File evaluationFile = null;
+	private int rectangleSizeMultiplyer = 1;
 	Controller controller;
 	Stage primaryStage;
 	private Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames;
@@ -50,12 +54,18 @@ public class EvaluationMain extends Application {
 	}
 
 
+	public int getRectangleSizeMultiplyer() {
+		return rectangleSizeMultiplyer;
+	}
+
 	public static void main(String[] args) {
 		launch(args);
 	}
 
-	public void setVideoPath(String videoPath) {
+	public void setVideoPath(String videoPath) throws IOException, JCodecException {
 		this.videoPath = videoPath;
+		BufferedImage bufferedImage = VideoUtil.getFrame(videoPath,0);
+		rectangleSizeMultiplyer = 900/bufferedImage.getWidth();
 		if (dumpDir != null) {
 			cleanDumpFolder();
 		}
