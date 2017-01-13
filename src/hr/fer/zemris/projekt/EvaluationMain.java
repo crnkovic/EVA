@@ -1,12 +1,10 @@
 package hr.fer.zemris.projekt;
 
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import org.jcodec.api.JCodecException;
 
 import java.awt.image.BufferedImage;
@@ -17,112 +15,214 @@ import java.util.List;
 import java.util.Map;
 
 public class EvaluationMain extends Application {
-	private final String APLICATION_NAME = "Aplikacija za evaluaciju";
-	private String videoPath = null;
-	private File dumpDir = null;
-	private File evaluationFile = null;
-	private int rectangleSizeMultiplyer = 1;
-	Controller controller;
-	Stage primaryStage;
-	private Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames;
+    /**
+     * Path to the video file.
+     */
+    private String videoPath = null;
 
-	@Override
-	public void start(Stage primaryStage) throws Exception {
-		this.primaryStage = primaryStage;
-		markedFrames = new HashMap<>();
+    /**
+     * Dumping directory.
+     */
+    private File dumpDir = null;
 
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
-		Parent root = loader.load();
-		primaryStage.setTitle(APLICATION_NAME);
+    /**
+     * Evaluation file.
+     */
+    private File evaluationFile = null;
 
-		Scene scene = new Scene(root);
-		primaryStage.setScene(scene);
+    /**
+     * Rectangle area multiplier.
+     */
+    private int rectangleSizeMultiplier = 1;
 
-		controller = loader.getController();
-		controller.setUp(scene, this);
+    /**
+     * Instance of the <b>Controller</b> class.
+     */
+    public Controller controller;
 
-		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-			@Override
-			public void handle(WindowEvent event) {
-				if (dumpDir != null) {
-					removeDumpDir();
-				}
-			}
-		});
+    /**
+     * Instance of the Java <b>Stage</b> class which acts as a primary stage.
+     */
+    public Stage primaryStage;
 
-		primaryStage.show();
-	}
+    /**
+     * Map of marked frames.
+     * Each key-value pair consists of the index of the frame as well as list of <b>Rectangle</b> objects.
+     */
+    private Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames;
 
+    /**
+     * Launch the application by running the launch() method from the parent <b>Application</b> class.
+     * Accepts command line arguments which then passes on to the launch() method.
+     *
+     * @param args Input arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
 
-	public int getRectangleSizeMultiplyer() {
-		return rectangleSizeMultiplyer;
-	}
+    /**
+     * @return int
+     */
+    public int getRectangleSizeMultiplier() {
+        return rectangleSizeMultiplier;
+    }
 
-	public static void main(String[] args) {
-		launch(args);
-	}
+    /**
+     * Set video file path and clean up the dumping directory so we have a fresh directory.
+     *
+     * @param videoPath Path to the video
+     * @throws IOException     IOException
+     * @throws JCodecException JCodecException
+     */
+    public void setVideoPath(String videoPath) throws IOException, JCodecException {
+        this.videoPath = videoPath;
 
-	public void setVideoPath(String videoPath) throws IOException, JCodecException {
-		this.videoPath = videoPath;
-		BufferedImage bufferedImage = VideoUtil.getFrame(videoPath,0);
-		rectangleSizeMultiplyer = 900/bufferedImage.getWidth();
-		if (dumpDir != null) {
-			cleanDumpFolder();
-		}
-	}
+        // Get first frame then calculate the width of the rectangle
+        BufferedImage bufferedImage = VideoUtil.getFrame(videoPath, 0);
+        rectangleSizeMultiplier = 900 / bufferedImage.getWidth();
 
-	public void removeDumpDir() {
-		cleanDumpFolder();
-		dumpDir.delete();
+        // Clean the dumping directory when we set video path.
+        if (isDumpingDirSet()) {
+            cleanDumpFolder();
+        }
+    }
 
-	}
+    /**
+     * Removes dumping directory, but first clean it up.
+     *
+     * @return True if dumping directory is removed, false otherwise.
+     */
+    private boolean removeDumpDir() {
+        cleanDumpFolder();
 
-	public void cleanDumpFolder() {
-		for (File file : dumpDir.listFiles()) {
-			if (!file.isDirectory()) {
-				file.delete();
-			}
-		}
-	}
+        return dumpDir.delete();
+    }
 
-	public String getVideoPath() {
-		return videoPath;
-	}
+    /**
+     * Cleans up dump folder.
+     * Deletes all files inside the directory.
+     */
+    private void cleanDumpFolder() {
+        File[] files = dumpDir.listFiles();
 
-	public File getDumpDir() {
-		return dumpDir;
-	}
+        // If empty, may produce null, so we gotta check.
+        if (files != null) {
+            for (File file : files) {
+                if (!file.isDirectory()) {
+                    file.delete();
+                }
+            }
+        }
+    }
 
-	public void setDumpDir(File dumpDir) {
-		if (this.dumpDir != null) {
-			removeDumpDir();
-		}
-		this.dumpDir = dumpDir;
-	}
+    /**
+     * Get path to the video file.
+     *
+     * @return Video file path
+     */
+    public String getVideoPath() {
+        return videoPath;
+    }
 
-	public boolean isDumpFolderSet() {
-		return dumpDir != null;
-	}
+    /**
+     * Get dumping directory as an instance of <b>File</b> class.
+     *
+     * @return Dumping directory
+     */
+    public File getDumpDir() {
+        return dumpDir;
+    }
 
-	public boolean isVideoDirSet() {
-		return videoPath != null;
-	}
+    /**
+     * Set dumping directory. Accepts <b>File</b> object and if one exists (the dumping directory), remove it.
+     *
+     * @param dumpDir Dumping directory
+     */
+    public void setDumpDir(File dumpDir) {
+        if (isDumpingDirSet()) {
+            removeDumpDir();
+        }
 
-	public File getEvaluationFile() {
-		return evaluationFile;
-	}
+        this.dumpDir = dumpDir;
+    }
 
-	public Map<Integer, List<javafx.scene.shape.Rectangle>> getMarkedFrames() {
-		return markedFrames;
-	}
+    /**
+     * Check if dumping directory is initialized.
+     *
+     * @return True if dumping directory is initialized, false otherwise.
+     */
+    public boolean isDumpingDirSet() {
+        return dumpDir != null;
+    }
 
-	public List<javafx.scene.shape.Rectangle> getMarkedFrame(int frameNumber){
-		return markedFrames.get(frameNumber);
-	}
+    /**
+     * Check if video path is initialized.
+     *
+     * @return True if video path is initialized, false otherwise.
+     */
+    public boolean isVideoDirSet() {
+        return videoPath != null;
+    }
 
-	public void setEvaluationFile(File evaluationFile) {
-		this.evaluationFile = evaluationFile;
-	}
+    /**
+     * Get the evaluation file.
+     *
+     * @return Evaluation file
+     */
+    public File getEvaluationFile() {
+        return evaluationFile;
+    }
 
+    /**
+     * Set the file that needs to be evaluated.
+     *
+     * @param evaluationFile Evaluation file
+     */
+    public void setEvaluationFile(File evaluationFile) {
+        this.evaluationFile = evaluationFile;
+    }
+
+    /**
+     * Get all marked frames.
+     *
+     * @return Marked frames
+     */
+    public Map<Integer, List<javafx.scene.shape.Rectangle>> getMarkedFrames() {
+        return markedFrames;
+    }
+
+    /**
+     * Get specific marked frame from the <b>MarkedFrames</b> map.
+     *
+     * @param frameNumber Marked frame index
+     * @return Marked frame
+     */
+    public List<javafx.scene.shape.Rectangle> getMarkedFrame(int frameNumber) {
+        return markedFrames.get(frameNumber);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        this.primaryStage = primaryStage;
+        markedFrames = new HashMap<>();
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
+        Parent root = loader.load();
+        primaryStage.setTitle("Aplikacija za evaluaciju");
+
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
+
+        controller = loader.getController();
+        controller.setUp(scene, this);
+
+        primaryStage.setOnCloseRequest(event -> {
+            if (isDumpingDirSet()) {
+                removeDumpDir();
+            }
+        });
+
+        primaryStage.show();
+    }
 }
-
