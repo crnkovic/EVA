@@ -1,0 +1,9 @@
+#evaluateButton {
+    -fx-padding: 5 30 5 30;
+    -fx-background-color: #eee;
+    -fx-border-radius: 0;
+    -fx-border-color: #CCC;
+    -fx-border-width: 1;
+    -fx-margin-top: 2;
+    -fx-margin-bottom: 2;
+}

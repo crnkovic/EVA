@@ -204,6 +204,9 @@ public class EvaluationMain extends Application {
 
         // Set default ("root") scene to the container.
         Scene scene = new Scene(root);
+        scene.getStylesheets().clear();
+        scene.getStylesheets().add(getClass().getResource("main.css").toExternalForm());
+
         primaryStage.setScene(scene);
 
         // Let controller have access to the application.
