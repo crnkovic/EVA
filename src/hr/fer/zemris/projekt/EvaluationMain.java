@@ -41,7 +41,7 @@ public class EvaluationMain extends Application {
     public Controller controller;
 
     /**
-     * Instance of the Java <b>Stage</b> class which acts as a primary stage.
+     * Instance of the Java <b>Stage</b> class which acts as a main UI container.
      */
     public Stage primaryStage;
 
@@ -205,24 +205,28 @@ public class EvaluationMain extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
+        this.primaryStage.setTitle("Aplikacija za evaluaciju");
+
         markedFrames = new HashMap<>();
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
         Parent root = loader.load();
-        primaryStage.setTitle("Aplikacija za evaluaciju");
 
+        // Set default ("root") scene to the container.
         Scene scene = new Scene(root);
-        primaryStage.setScene(scene);
+        this.primaryStage.setScene(scene);
 
+        // Let controller have access to the application.
         controller = loader.getController();
         controller.setUp(scene, this);
 
-        primaryStage.setOnCloseRequest(event -> {
+        // Set an event which handles removing dumping directory when the application closes.
+        this.primaryStage.setOnCloseRequest(event -> {
             if (isDumpingDirSet()) {
                 removeDumpDir();
             }
         });
 
-        primaryStage.show();
+        this.primaryStage.show();
     }
 }

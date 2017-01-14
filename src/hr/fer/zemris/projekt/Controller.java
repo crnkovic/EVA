@@ -37,15 +37,42 @@ import java.util.*;
 import java.util.List;
 
 public class Controller implements Initializable {
+    /**
+     * Current window scene.
+     */
     private Scene scene;
+
+    /**
+     * Reference to the main application.
+     */
     private EvaluationMain evaluationMainApp;
+
+    /**
+     * Offset to the next frame.
+     */
     private static final int FRAME_HOP = 15;
+
+    /**
+     * Active frame number.
+     */
     @FXML
     private Label frameNumberField;
+
+    /**
+     * Frame slider.
+     */
     @FXML
     private Slider frameSlider;
+
+    /**
+     * Shows image of the football field (of the current frame).
+     */
     @FXML
     private ImageView footballFieldImage;
+
+    /**
+     * List of marked frames.
+     */
     @FXML
     private ListView markedFramesList;
     @FXML
@@ -54,22 +81,42 @@ public class Controller implements Initializable {
     private Label precisionValue;
     @FXML
     private Label f1Value;
+
+    /**
+     * <b>TextField</b> object containing computed Jaccard index.
+     *
+     * @see <a href="http://en.wikipedia.org/wiki/Jaccard_index">Calculating the Jaccard index</a>
+     */
     @FXML
-    private TextField jaccardovIndex;
+    private TextField jaccardIndex;
     @FXML
     private Pane imagePane;
 
     private double beginningX;
     private double beginningY;
     private boolean set = false;
+
+    /**
+     * Contains last drawn rectangle.
+     */
     private javafx.scene.shape.Rectangle lastRectangle;
 
+    /**
+     * List containing drawn rectangles.
+     */
     private List<javafx.scene.shape.Rectangle> drawnRectangles;
 
-
+    /**
+     * This method is called by the main application to give a reference back to itself and accepts scene and the application itself.
+     * Also resets the list containing drawn rectangles.
+     *
+     * @param scene          Scene
+     * @param evaluationMain Application
+     */
     public void setUp(Scene scene, EvaluationMain evaluationMain) {
         this.scene = scene;
         this.evaluationMainApp = evaluationMain;
+
         drawnRectangles = new ArrayList<>();
     }
 
@@ -102,8 +149,7 @@ public class Controller implements Initializable {
         });
         footballFieldImage.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseEvent -> {
             if (set) {
-                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage
-                        .getFitHeight()) {
+                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight()) {
 
                     javafx.scene.shape.Rectangle rectangle = drawRectangle(mouseEvent.getX(), mouseEvent.getY());
                     imagePane.getChildren().remove(lastRectangle);
@@ -134,6 +180,7 @@ public class Controller implements Initializable {
         double height = Math.abs(beginningY - y);
         double startX;
         double startY;
+
         if (beginningX < x) {
             startX = beginningX;
         } else {
@@ -156,50 +203,80 @@ public class Controller implements Initializable {
 
     //TODO add marking on the frames
 
+    /**
+     * Called when the frame slider's position is changed.
+     * Sets the new frame based on slider value.
+     *
+     * @param event Event
+     * @throws IOException     IOException
+     * @throws JCodecException JCodecException
+     */
     @FXML
     public void newFrameSelected(Event event) throws IOException, JCodecException {
-        int frameNumber = setLabelForSliderValue();
-        setSelectedFrame(frameNumber);
+        setSelectedFrame(setLabelForSliderValue());
     }
 
-    private int getRealFrameNumberForSliderValue(long frame) {
-        if (frame == 0) {
-            return 1;
-        }
-        return (int) (FRAME_HOP * frame);
-    }
-
-    public void setSelectedFrame(int number) throws IOException, JCodecException {
+    /**
+     * "Sets" the selected frame by displaying it and draws any rectangles that were previously drawn.
+     *
+     * @param number Frame number
+     * @throws IOException     IOException
+     * @throws JCodecException JCodecException
+     */
+    private void setSelectedFrame(int number) throws IOException, JCodecException {
         BufferedImage fieldImage = getImageForFrame(number);
         Image image = SwingFXUtils.toFXImage(fieldImage, null);
+
+        // Display (draw) the frame to the user
         footballFieldImage.setImage(image);
+
+        // Remove rectangles that were drawn in the previous frame and collects all rectangles that were to be marked
         imagePane.getChildren().removeAll(drawnRectangles);
         drawnRectangles.clear();
         List<javafx.scene.shape.Rectangle> rectanglesToDraw = evaluationMainApp.getMarkedFrame(number);
+
+        // There are any rectangles to be drawn?
         if (rectanglesToDraw != null) {
+            // Loop through the rectangles to be drawn and draw them
             for (javafx.scene.shape.Rectangle rectangle : rectanglesToDraw) {
                 drawnRectangles.add(rectangle);
+
                 imagePane.getChildren().add(rectangle);
             }
         }
     }
 
-    public BufferedImage getImageForFrame(int number) throws IOException, JCodecException {
+    /**
+     * Converts video frame to the image (.png format).
+     *
+     * @param number Frame number
+     * @return Instance of the <b>BufferedImage</b> class containing the picture.
+     * @throws IOException     IOException
+     * @throws JCodecException JCodecException
+     */
+    private BufferedImage getImageForFrame(int number) throws IOException, JCodecException {
         int frameNumber = number - 1;
-        File frameFile = evaluationMainApp.getDumpDir().toPath().resolve(frameNumber + ".png").toFile();
-        BufferedImage fieldImage;
+        String format = "png";
+
+        File frameFile = evaluationMainApp.getDumpDir()
+                .toPath()
+                .resolve(frameNumber + "." + format)
+                .toFile();
+
+        // If picture already exists, there is no need to create a new one, just return the one
         if (frameFile.exists()) {
-            fieldImage = ImageIO.read(frameFile);
-        } else {
-            fieldImage = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), frameNumber);
-            ImageIO.write(fieldImage, "png", frameFile);
+            return ImageIO.read(frameFile);
         }
+
+        // Create the image from the frame number and write it to the user
+        BufferedImage fieldImage = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), frameNumber);
+        ImageIO.write(fieldImage, format, frameFile);
+
         return fieldImage;
     }
 
     @FXML
     public void setVideoAndSetUp(ActionEvent actionEvent) throws FrameGrabber.Exception, IOException, JCodecException {
-        //TODO : dodajte jos neke ekstenzije ako mislite da je potrebno
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Video", "*.mp4", "*.avi", "*.mkv");
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(extFilter);
@@ -216,7 +293,7 @@ public class Controller implements Initializable {
         evaluationMainApp.setEvaluationFile(null);
 
         if (evaluationMainApp.isDumpingDirSet()) {
-            primapySetUp();
+            primarySetup();
         }
     }
 
@@ -229,29 +306,28 @@ public class Controller implements Initializable {
         file.mkdir();
         evaluationMainApp.setDumpDir(file);
         if (evaluationMainApp.isVideoDirSet()) {
-            primapySetUp();
+            primarySetup();
         }
     }
 
-    public void primapySetUp() throws IOException, JCodecException {
+    private void primarySetup() throws IOException, JCodecException {
         setSelectedFrame(1);
         setLabelForSliderValue();
+
         frameSlider.setDisable(false);
     }
-
 
     @FXML
     public void setEvaluationFile(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Odaberi datoteku za evaluaciju");
         File file = fileChooser.showOpenDialog(scene.getWindow());
+
         evaluationMainApp.setEvaluationFile(file);
     }
 
-
     @FXML
     public void evaluate(ActionEvent actionEvent) {
-
         //TODO check first if you can evaluate
         if (evaluationMainApp.getMarkedFrames().size() == 0) {
             //TODO throw warning that there should be marked frames
@@ -273,7 +349,7 @@ public class Controller implements Initializable {
                 javafx.scene.shape.Rectangle usedRectangle = null;
 
                 for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
-                    if (jaccardsIndex(generatorRectangle, groundTruthRectangle) > Float.parseFloat(jaccardovIndex
+                    if (computerJaccardIndex(generatorRectangle, groundTruthRectangle) > Float.parseFloat(jaccardIndex
                             .getText())) {
                         //hit
                         usedRectangle = generatorRectangle;
@@ -306,32 +382,54 @@ public class Controller implements Initializable {
         f1Value.setText(String.valueOf(f1) + "%");
     }
 
-    public static double jaccardsIndex(javafx.scene.shape.Rectangle firstRectangle, javafx.scene.shape.Rectangle groundTruthRectangle) {
+    /**
+     * Computes the Jaccard index based on the rectangles' properties.
+     * Delegates <i>computeJaccardIndex</i> method from the <b>ComputationUtils</b> helper class.
+     *
+     * @param markedRectangle      Marked rectangle object
+     * @param groundTruthRectangle Ground truth rectangle object
+     * @return Computed index
+     * @see <a href="http://en.wikipedia.org/wiki/Jaccard_index">Calculating the Jaccard index</a>
+     */
+    public static double computerJaccardIndex(javafx.scene.shape.Rectangle markedRectangle, javafx.scene.shape.Rectangle groundTruthRectangle) {
+        return ComputationUtils.computeJaccardIndex(
+                // Marked rectangle properties
+                markedRectangle.getX(),
+                markedRectangle.getY(),
+                markedRectangle.getWidth(),
+                markedRectangle.getHeight(),
 
-        double newX = Math.max(firstRectangle.getX(), groundTruthRectangle.getX());
-        double newY = Math.min(firstRectangle.getY(), groundTruthRectangle.getY());
-        double newWidth = Math.min(firstRectangle.getX() + firstRectangle.getWidth(), groundTruthRectangle.getX() + groundTruthRectangle.getWidth()) - newX;
-        double newHeight = Math.max(firstRectangle.getY() + firstRectangle.getY(), groundTruthRectangle.getY() + groundTruthRectangle.getHeight()) - newY;
-        System.out.println(newHeight);
-        System.out.println(newWidth);
+                // "Ground truth" rectangle properties
+                groundTruthRectangle.getX(),
+                groundTruthRectangle.getY(),
+                groundTruthRectangle.getWidth(),
+                groundTruthRectangle.getHeight()
+        );
 
-        double intersectionArea = newWidth * newHeight;
-        System.out.println(intersectionArea);
-        double unionArea = firstRectangle.getHeight() * firstRectangle.getWidth() + groundTruthRectangle.getHeight() * groundTruthRectangle.getWidth() - intersectionArea;
-        System.out.println(unionArea);
-        return intersectionArea / unionArea;
+//        double newX = Math.max(firstRectangle.getX(), groundTruthRectangle.getX());
+//        double newY = Math.min(firstRectangle.getY(), groundTruthRectangle.getY());
+//        double newWidth = Math.min(firstRectangle.getX() + firstRectangle.getWidth(), groundTruthRectangle.getX() + groundTruthRectangle.getWidth()) - newX;
+//        double newHeight = Math.max(firstRectangle.getY() + firstRectangle.getY(), groundTruthRectangle.getY() + groundTruthRectangle.getHeight()) - newY;
+//        System.out.println(newHeight);
+//        System.out.println(newWidth);
+//
+//        double intersectionArea = newWidth * newHeight;
+//        System.out.println(intersectionArea);
+//        double unionArea = firstRectangle.getHeight() * firstRectangle.getWidth() + groundTruthRectangle.getHeight() * groundTruthRectangle.getWidth() - intersectionArea;
+//        System.out.println(unionArea);
+//        return intersectionArea / unionArea;
     }
 
-
-    public LinkedList<javafx.scene.shape.Rectangle> rectanglesForAFrame(int numberOfFrame) {
+    private LinkedList<javafx.scene.shape.Rectangle> rectanglesForAFrame(int frameNumber) {
         LinkedList<javafx.scene.shape.Rectangle> rectangles = new LinkedList<>();
+
         try {
             Files.lines(evaluationMainApp.getEvaluationFile().toPath())
-                    .filter(line -> line.startsWith(Integer.toString(numberOfFrame) + ","))
+                    .filter(line -> line.startsWith(Integer.toString(frameNumber) + ","))
                     .forEach(line -> {
                                 String[] polje = line.split(",");
                         /*
-						polje{
+                        polje{
 							brojFramea,
 							ID tima,
 							ID igraca,
@@ -356,6 +454,7 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return rectangles;
     }
 
@@ -571,7 +670,6 @@ public class Controller implements Initializable {
         pane5.setRight(spremi);
         pane.setBottom(pane5);
 
-
         Scene secondScene = new Scene(pane, 700, 250);
 
         Stage secondStage = new Stage();
@@ -582,30 +680,44 @@ public class Controller implements Initializable {
         secondStage.show();
     }
 
-
+    /**
+     * Called when the "save file containing marks" button is pressed.
+     * Entire process to the saving:
+     * - Gets user chosen directory where to save a file
+     * - Creates new .txt file
+     * - Loops through the frame numbers, gets list of marked rectangles for specific frame
+     * - Writes to the file
+     *
+     * @param actionEvent Event
+     * @throws IOException Exception thrown if the file cannot be created or something funny happened to the stream
+     */
     @FXML
     public void saveFileWithMarks(ActionEvent actionEvent) throws IOException {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Spremi datoteku s oznakama");
+
+        // Get user chosen directory
         File file = directoryChooser.showDialog(scene.getWindow());
         Path directory = file.toPath();
-        String path = directory + File.separator + "oznakeOkvira.txt";
-        File txtFile = new File(path);
 
-        //TODO sortirat rectangleove po broju frame-a i dodat metodu koja pretvara u pravilan oblik
-        List<Integer> redoslijed = new ArrayList<>();
-        redoslijed.addAll(evaluationMainApp.getMarkedFrames().keySet());
-        redoslijed.sort(null);
-
+        // Create new textual file whose path is dynamically generated from the user chosen directory
+        // Also create UTF8 charset class that writes to the file
+        File txtFile = new File(directory + File.separator + "oznakeOkvira.txt");
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(txtFile), "UTF-8"));
 
-        for (int brojOkvira : redoslijed) {
-            List<javafx.scene.shape.Rectangle> rectangles = evaluationMainApp.getMarkedFrame(brojOkvira);
-            for (javafx.scene.shape.Rectangle oznaka : rectangles) {
-                writer.write(oznaka.toString() + System.lineSeparator());
+        // TODO sortirat rectangleove po broju frame-a i dodat metodu koja pretvara u pravilan oblik
+        List<Integer> frameNumbersList = new ArrayList<>();
+        frameNumbersList.addAll(evaluationMainApp.getMarkedFrames().keySet());
+        frameNumbersList.sort(null);
+
+        for (int frameNumber : frameNumbersList) {
+            // Loop through the rectangles for this specific frame and write it to the file
+            for (javafx.scene.shape.Rectangle label : evaluationMainApp.getMarkedFrame(frameNumber)) {
+                writer.write(label.toString() + System.lineSeparator());
                 writer.flush();
             }
         }
+
         writer.close();
     }
 
@@ -617,33 +729,68 @@ public class Controller implements Initializable {
         fail.showAndWait();
     }
 
+    /**
+     * Called when the slider value (slider position) is changed.
+     * Sets the label next to the slider depending on its position.
+     *
+     * @param event Event
+     */
     @FXML
     public void setFrameNumberInLabel(Event event) {
         setLabelForSliderValue();
     }
 
     /**
-     * Sets the label next to the slider depending on the slider position.
+     * Helper method that sets the label next to the slider depending on its position.
      *
-     * @return selected frame with the slider position
+     * @return Frame number depending on the slider position
      */
-    public int setLabelForSliderValue() {
-        long frame = Math.round(frameSlider.getValue());
-        int frameNumber = getRealFrameNumberForSliderValue(frame);
+    private int setLabelForSliderValue() {
+        int frameNumber = getFrameNumber(Math.round(frameSlider.getValue()));
         frameNumberField.setText(String.valueOf(frameNumber));
+
         return frameNumber;
     }
 
+    /**
+     * Called when the save marks button is pressed.
+     * Calculates the frame number based on the slider value, gets all drawn rectangles
+     * and updates the marked frame map with gathered data.
+     *
+     * @param actionEvent Event
+     */
     @FXML
     public void saveMarks(ActionEvent actionEvent) {
+        // Get map of all marked frames from the application
         Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames = evaluationMainApp.getMarkedFrames();
-        long frame = Math.round(frameSlider.getValue());
-        int frameNumber = getRealFrameNumberForSliderValue(frame);
+
+        // Calculate frame number
+        int frameNumber = getFrameNumber(Math.round(frameSlider.getValue()));
+
+        // Get all drawn rectangles in this frame and save them to the markedFrames map
         List<javafx.scene.shape.Rectangle> rectangles = new ArrayList<>();
         rectangles.addAll(drawnRectangles);
         markedFrames.put(frameNumber, rectangles);
+
+        // Add this frame number to the marked frames list if it's not already there
         if (!markedFramesList.getItems().contains(String.valueOf(frameNumber))) {
             markedFramesList.getItems().add(String.valueOf(frameNumber));
         }
+    }
+
+    /**
+     * Get "real" calculated frame number based on the slider value.
+     * Multiplies slider value by the FRAME_HOP constant.
+     *
+     * @param sliderValue Slider value
+     * @return Calculate frame number
+     */
+    private int getFrameNumber(long sliderValue) {
+        // Return first frame number (1) if slider is at its zeroth position.
+        if (sliderValue == 0) {
+            return 1;
+        }
+
+        return (int) (FRAME_HOP * sliderValue);
     }
 }

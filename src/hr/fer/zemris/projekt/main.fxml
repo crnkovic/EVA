@@ -54,7 +54,7 @@
                 <AnchorPane prefHeight="28.0" prefWidth="200.0">
                     <children>
                         <Label layoutY="-6.0" prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0" />
-                        <TextField fx:id="jaccardovIndex" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
+                        <TextField fx:id="jaccardIndex" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
                     </children>
                 </AnchorPane>
                 <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
