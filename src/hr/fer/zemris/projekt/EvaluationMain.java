@@ -36,16 +36,6 @@ public class EvaluationMain extends Application {
     private int rectangleSizeMultiplier = 1;
 
     /**
-     * Instance of the <b>Controller</b> class.
-     */
-    public Controller controller;
-
-    /**
-     * Instance of the Java <b>Stage</b> class which acts as a main UI container.
-     */
-    public Stage primaryStage;
-
-    /**
      * Map of marked frames.
      * Each key-value pair consists of the index of the frame as well as list of <b>Rectangle</b> objects.
      */
@@ -204,9 +194,9 @@ public class EvaluationMain extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("Aplikacija za evaluaciju");
+        primaryStage.setTitle("Aplikacija za evaluaciju");
 
+        // Empty out the marked frames map
         markedFrames = new HashMap<>();
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
@@ -214,19 +204,19 @@ public class EvaluationMain extends Application {
 
         // Set default ("root") scene to the container.
         Scene scene = new Scene(root);
-        this.primaryStage.setScene(scene);
+        primaryStage.setScene(scene);
 
         // Let controller have access to the application.
-        controller = loader.getController();
+        Controller controller = loader.getController();
         controller.setUp(scene, this);
 
-        // Set an event which handles removing dumping directory when the application closes.
-        this.primaryStage.setOnCloseRequest(event -> {
+        // Set an event which handles removing dumping directory as the application closes.
+        primaryStage.setOnCloseRequest(event -> {
             if (isDumpingDirSet()) {
                 removeDumpDir();
             }
         });
 
-        this.primaryStage.show();
+        primaryStage.show();
     }
 }
