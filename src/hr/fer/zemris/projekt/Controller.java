@@ -202,10 +202,10 @@ public class Controller implements Initializable {
      * @throws IOException     IOException
      * @throws JCodecException JCodecException
      */
-    public void setImageDumpDir() throws IOException, JCodecException {
+    private void setImageDumpDir() throws IOException, JCodecException {
         File file = new File("./temp");
 
-        if (!file.mkdir()) {
+        if (!file.mkdir() || !file.canWrite()) {
             throw new IOException("Dumping directory can't be created.");
         }
 
