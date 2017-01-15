@@ -226,7 +226,7 @@ public class Controller implements Initializable {
     @FXML
     public void setEvaluationFile(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Odaberi datoteku za evaluaciju");
+        fileChooser.setTitle("Odaberite datoteku s referentnim oznakama");
 
         evaluationMainApp.setEvaluationFile(fileChooser.showOpenDialog(scene.getWindow()));
     }
@@ -240,9 +240,17 @@ public class Controller implements Initializable {
      */
     @FXML
     public void evaluate(ActionEvent actionEvent) {
+        // Make sure video is loaded
+        if (!evaluationMainApp.isVideoDirSet()) {
+            error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
+
+            return;
+        }
+
         // There are no frames to compare to?
         if (evaluationMainApp.getMarkedFrames().size() == 0) {
-            // TODO throw warning that there should be marked frames
+            warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
+
             return;
         }
 
@@ -281,9 +289,9 @@ public class Controller implements Initializable {
             }
         }
 
-//        System.out.println(truePositives);
-//        System.out.println(falsePositives);
-//        System.out.println(falseNegatives);
+        System.out.println(truePositives);
+        System.out.println(falsePositives);
+        System.out.println(falseNegatives);
 
         // Compute all necessary properties
         float recall = ComputationUtils.computeRecall(truePositives, falseNegatives);
@@ -782,7 +790,21 @@ public class Controller implements Initializable {
      * @param content Body of the alert
      */
     private void warning(String title, String content) {
-        Alert alert = new Alert(AlertType.INFORMATION);
+        Alert alert = new Alert(AlertType.WARNING);
+
+        alert.setHeaderText(title);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    /**
+     * Show error to the user.
+     *
+     * @param title   Alert title
+     * @param content Body of the alert
+     */
+    private void error(String title, String content) {
+        Alert alert = new Alert(AlertType.ERROR);
 
         alert.setHeaderText(title);
         alert.setContentText(content);
