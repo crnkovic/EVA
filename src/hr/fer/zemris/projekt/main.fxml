@@ -49,8 +49,6 @@
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
-                <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir"
-                          text="Odaberite direktorij za pohranu slika"/>
                 <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile"
                           text="Odaberite datoteku s referentnim podacima"/>
             </Menu>

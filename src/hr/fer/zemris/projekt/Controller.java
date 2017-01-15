@@ -190,30 +190,23 @@ public class Controller implements Initializable {
 
         evaluationMainApp.setEvaluationFile(null);
 
-        if (evaluationMainApp.isDumpingDirSet()) {
-            primarySetup();
-        }
+        setImageDumpDir();
+        primarySetup();
+
+        System.out.println(evaluationMainApp.getDumpDir());
     }
 
     /**
-     * Called when user pressed the "choose frame directory" button. Frame directory is a directory where all the frame images will be dumped when converting video to the images.
      * Sets up image directory reference in the main application and runs the {@link #primarySetup() primarySetup} method if the video directory is defined.
      *
-     * @param actionEvent Event
      * @throws IOException     IOException
      * @throws JCodecException JCodecException
      */
-    @FXML
-    public void setImageDumpDir(ActionEvent actionEvent) throws IOException, JCodecException {
-        // TODO: dir u istom folderu gdje je app
-        DirectoryChooser fileChooser = new DirectoryChooser();
-        fileChooser.setTitle("Odaberi direktorij");
-
-        File file = fileChooser.showDialog(scene.getWindow());
-        file = file.toPath().resolve("images").toFile();
+    public void setImageDumpDir() throws IOException, JCodecException {
+        File file = new File("./temp");
 
         if (!file.mkdir()) {
-            throw new IOException("Image dumping directory can't be created.");
+            throw new IOException("Dumping directory can't be created.");
         }
 
         // Set up the reference to the dumping directory in the main application
