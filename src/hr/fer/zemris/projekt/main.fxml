@@ -1,39 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.fer.zemris.projekt.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
-        <Pane fx:id="imagePane">
-            <children>
-                      <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
-                </ImageView>
-            </children>
+        <Pane fx:id="imagePane" style="-fx-padding: 10">
+            <ImageView fx:id="footballFieldImage" layoutY="40" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
+                       preserveRatio="true" BorderPane.alignment="CENTER">
+            </ImageView>
         </Pane>
     </left>
     <bottom>
-        <HBox alignment="CENTER">
-            <children>
+        <HBox alignment="CENTER" style="-fx-padding: 10">
+            <!--> onMouseReleased for no preview when dragging<!-->
+            <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected"
+                    onMouseDragged="#setFrameNumberInLabel" onMouseReleased="#newFrameSelected" prefHeight="15.0"
+                    HBox.hgrow="ALWAYS"/>
 
-                <!--> onMouseReleased for no preview when dragging<!-->
-                <Slider fx:id="frameSlider" disable="true" onKeyReleased="#newFrameSelected" onMouseDragged="#setFrameNumberInLabel" onMouseReleased="#newFrameSelected" prefHeight="15.0" HBox.hgrow="ALWAYS" />
-                <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden" />
-                <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:" />
-                <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT" />
-                <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden" />
-                <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0" text="Spremi oznake" />
-            </children>
+            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden"/>
+
+            <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:"/>
+            <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT"/>
+
+            <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden"/>
+
+            <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0"
+                    text="Spremi oznake"/>
         </HBox>
     </bottom>
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
-                <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberite direktorij za pohranu slika"/>
-                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s referentnim podacima"/>
+                <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir"
+                          text="Odaberite direktorij za pohranu slika"/>
+                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile"
+                          text="Odaberite datoteku s referentnim podacima"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frameove"/>
@@ -42,44 +61,68 @@
         </MenuBar>
     </top>
     <right>
-        <VBox prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-            <children>
-                <AnchorPane prefHeight="28.0" prefWidth="200.0">
-                    <children>
-                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0" />
-                        <TextField fx:id="jaccardIndex" layoutX="150.0" prefHeight="34.0" prefWidth="74.0" text="" AnchorPane.rightAnchor="0.0" />
-                    </children>
-                </AnchorPane>
-                <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0" prefWidth="200.0" text="Evaluiraj" VBox.vgrow="ALWAYS" />
-                <AnchorPane prefHeight="34.0" prefWidth="179.0">
-                    <children>
-                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="52.0" text="Odziv: " AnchorPane.leftAnchor="0.0" />
-                        <Label fx:id="recallValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
+        <VBox prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 5 10 10 10" BorderPane.alignment="CENTER">
+            <AnchorPane prefHeight="28.0" prefWidth="200.0"
+                        style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0;-fx-padding: 0 0 5 0">
+                <Label prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0"/>
+                <TextField fx:id="jaccardIndex" layoutX="150.0" layoutY="8.0" prefHeight="25.0" prefWidth="74.0"
+                           AnchorPane.rightAnchor="0.0"/>
+            </AnchorPane>
 
-                    </children>
-                </AnchorPane>
-                <AnchorPane prefHeight="28.0" prefWidth="200.0">
-                    <children>
-                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="84.0" text="Preciznost: " AnchorPane.leftAnchor="0.0" />
-                        <Label fx:id="precisionValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
-                    </children>
-                </AnchorPane>
-                <AnchorPane prefHeight="28.0" prefWidth="200.0">
-                    <children>
-                        <Label layoutY="-6.0" prefHeight="40.0" prefWidth="73.0" text="F1 mjera: " AnchorPane.leftAnchor="0.0" />
-                        <Label fx:id="f1Value" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%" AnchorPane.rightAnchor="0.0" />
-                    </children>
-                </AnchorPane>
-                <AnchorPane prefHeight="18.0" prefWidth="200.0">
-                    <children>
-                        <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
-                        <Button layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0" text="Više informacija" AnchorPane.rightAnchor="0.0" />
-                    </children>
-                </AnchorPane>
+            <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0"
+                    prefWidth="200.0" text="Evaluacija" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>10</top>
+                        <bottom>10</bottom>
+                    </Insets>
+                </VBox.margin>
+            </Button>
 
-                <!--> Dodaj gumb obrisi sve i gumb da se oznaci iz datoteke<!-->
-                <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
-            </children>
+            <AnchorPane prefHeight="34.0" prefWidth="179.0"
+                        style="-fx-border-color: #d6d6d6; -fx-border-width: 1 0 0 0;">
+                <Label prefHeight="40.0" prefWidth="52.0" text="Odziv: " AnchorPane.leftAnchor="0.0"/>
+                <Label fx:id="recallValue" layoutX="150.0" prefHeight="40.0" prefWidth="50.0" text="0.0%"
+                       AnchorPane.rightAnchor="0.0"/>
+            </AnchorPane>
+
+            <AnchorPane prefHeight="28.0" prefWidth="200.0">
+                <Label layoutY="-6.0" prefHeight="40.0" prefWidth="84.0" text="Preciznost: "
+                       AnchorPane.leftAnchor="0.0"/>
+                <Label fx:id="precisionValue" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0"
+                       text="0.0%" AnchorPane.rightAnchor="0.0"/>
+            </AnchorPane>
+
+            <AnchorPane prefHeight="28.0" prefWidth="200.0" style="-fx-padding: 0 0 10 0">
+                <Label layoutY="-6.0" prefHeight="40.0" prefWidth="73.0" text="F1 mjera: " AnchorPane.leftAnchor="0.0"/>
+                <Label fx:id="f1Value" layoutX="150.0" layoutY="-6.0" prefHeight="40.0" prefWidth="50.0" text="0.0%"
+                       AnchorPane.rightAnchor="0.0"/>
+            </AnchorPane>
+
+            <AnchorPane prefHeight="18.0" prefWidth="200.0"
+                        style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0; -fx-padding: 10 0 0 0">
+                <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
+                <Button fx:id="moreInfoButton" layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0"
+                        text="Više informacija" AnchorPane.rightAnchor="0.0">
+                    <VBox.margin>
+                        <Insets>
+                            <top>10</top>
+                            <bottom>10</bottom>
+                        </Insets>
+                    </VBox.margin>
+                </Button>
+            </AnchorPane>
+
+            <!--> Dodaj gumb obrisi sve i gumb da se oznaci iz datoteke<!-->
+            <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 10 0 0 0"
+                      VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>10</top>
+                        <bottom>10</bottom>
+                    </Insets>
+                </VBox.margin>
+            </ListView>
         </VBox>
     </right>
 
