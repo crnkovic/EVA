@@ -205,6 +205,7 @@ public class Controller implements Initializable {
      */
     @FXML
     public void setImageDumpDir(ActionEvent actionEvent) throws IOException, JCodecException {
+        // TODO: dir u istom folderu gdje je app
         DirectoryChooser fileChooser = new DirectoryChooser();
         fileChooser.setTitle("Odaberi direktorij");
 

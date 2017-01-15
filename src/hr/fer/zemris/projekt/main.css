@@ -1,9 +1,39 @@
-#evaluateButton {
-    -fx-padding: 5 30 5 30;
+.menu-bar {
     -fx-background-color: #eee;
-    -fx-border-radius: 0;
-    -fx-border-color: #CCC;
+    -fx-padding: 0;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #ccc;
+}
+
+.menu {
+    -fx-padding: 5 10;
+}
+
+.menu:hover, .menu:active, .menu:focused {
+    -fx-background-color: #d6d6d6;
+    -fx-cursor: hand;
+}
+
+.menu:showing {
+    -fx-background-color: #d6d6d6;
+}
+
+.menu-item {
+    -fx-background-color: #eee;
+    -fx-padding: 10;
+}
+
+.menu-item:hover, .menu .menu-item:hover {
+    -fx-background-color: #d6d6d6;
+    -fx-cursor: hand;
+}
+
+.context-menu {
+    -fx-padding: 0;
     -fx-border-width: 1;
-    -fx-margin-top: 2;
-    -fx-margin-bottom: 2;
+    -fx-border-color: #CCC;
+}
+
+.menu .label, .menu-item .label {
+    -fx-text-fill: #333;
 }

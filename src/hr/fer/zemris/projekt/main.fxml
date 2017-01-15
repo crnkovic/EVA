@@ -30,22 +30,15 @@
     </bottom>
     <top>
         <MenuBar BorderPane.alignment="CENTER">
-            <menus>
-                <Menu mnemonicParsing="false" text="Postavke">
-                    <items>
-                        <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberi video" />
-                        <!-->Mozda da se ne bira nego da se stvori folder tamo gdje se pokrene aplikacija ???<!-->
-                        <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberi direktorij za frameove" />
-                        <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberi datoteku za evaluaciju" />
-                         </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Spremanje">
-                    <items>
-                        <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frameove" />
-                        <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi datoteku s oznakama" />
-                    </items>
-                </Menu>
-            </menus>
+            <Menu mnemonicParsing="false" text="Postavke">
+                <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
+                <MenuItem mnemonicParsing="false" onAction="#setImageDumpDir" text="Odaberite direktorij za pohranu slika"/>
+                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s referentnim podacima"/>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Spremanje">
+                <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frameove"/>
+                <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi datoteku s oznakama"/>
+            </Menu>
         </MenuBar>
     </top>
     <right>
