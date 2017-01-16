@@ -610,6 +610,14 @@ public class Controller implements Initializable {
         }
     }
 
+    @FXML
+    public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException{
+        //TODO brisanje slika iz dumpDira, postavljanje na početni frame kada se izbrišu svi označeni frameovi
+        int selectedId = markedFramesList.getSelectionModel().getSelectedIndex();
+        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId).toString()));
+        markedFramesList.getItems().remove(selectedId);
+    }
+
 
     /**
      * This method is called by the main application to give a reference back to itself and accepts scene and the application itself.
@@ -903,13 +911,5 @@ public class Controller implements Initializable {
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
-    }
-
-    @FXML
-    public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException{
-        //TODO brisanje slika iz dumpDira, postavljanje na početni frame kada se izbrišu svi označeni frameovi
-        int selectedId = markedFramesList.getSelectionModel().getSelectedIndex();
-        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId).toString()));
-        markedFramesList.getItems().remove(selectedId);
     }
 }
