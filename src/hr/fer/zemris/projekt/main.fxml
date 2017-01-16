@@ -18,11 +18,11 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-            xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage" layoutY="40" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
+            <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
                        preserveRatio="true" BorderPane.alignment="CENTER">
             </ImageView>
         </Pane>
@@ -101,14 +101,14 @@
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0; -fx-padding: 10 0 0 0">
                 <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
                 <Button fx:id="moreInfoButton" layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0"
-                        text="Više informacija" AnchorPane.rightAnchor="0.0">
-                    <VBox.margin>
-                        <Insets>
-                            <top>10</top>
-                            <bottom>10</bottom>
-                        </Insets>
-                    </VBox.margin>
-                </Button>
+                        text="Više informacija" AnchorPane.rightAnchor="0.0"/>
+                <!--<VBox.margin>-->
+                <!--<Insets>-->
+                <!--<top>10</top>-->
+                <!--<bottom>10</bottom>-->
+                <!--</Insets>-->
+                <!--</VBox.margin>-->
+                <!--</Button>-->
             </AnchorPane>
 
             <!--> Dodaj gumb obrisi sve i gumb da se oznaci iz datoteke<!-->
@@ -123,5 +123,4 @@
             </ListView>
         </VBox>
     </right>
-
 </BorderPane>

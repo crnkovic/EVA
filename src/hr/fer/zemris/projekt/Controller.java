@@ -8,7 +8,6 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -74,7 +73,7 @@ public class Controller implements Initializable {
      * List of marked frames.
      */
     @FXML
-    private ListView markedFramesList;
+    private ListView<String> markedFramesList;
 
     /**
      * Recall value.
@@ -170,13 +169,13 @@ public class Controller implements Initializable {
      */
     @FXML
     public void setVideoAndSetUp(ActionEvent actionEvent) throws FrameGrabber.Exception, IOException, JCodecException {
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Video", videoExtensions);
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Video (" + String.join(", ", videoExtensions).replaceAll("\\*", "") + ")", videoExtensions);
 
         // Show file chooser to the user and let it choose a video
         // Only accepts video extensions defined in a class property
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(extFilter);
-        fileChooser.setTitle("Odaberi video");
+        fileChooser.setTitle("Odaberite video za evaluaciju");
         File file = fileChooser.showOpenDialog(scene.getWindow());
 
         // Set path to the video in the main application and collect number of frames from the video
@@ -188,33 +187,20 @@ public class Controller implements Initializable {
         frameSlider.setMin(0);
         frameSlider.setBlockIncrement(50);
 
+        // Reset ground truth file
         evaluationMainApp.setEvaluationFile(null);
 
-        setImageDumpDir();
-        primarySetup();
+        File dumpDir = new File("./temp");
 
-        System.out.println(evaluationMainApp.getDumpDir());
-    }
-
-    /**
-     * Sets up image directory reference in the main application and runs the {@link #primarySetup() primarySetup} method if the video directory is defined.
-     *
-     * @throws IOException     IOException
-     * @throws JCodecException JCodecException
-     */
-    private void setImageDumpDir() throws IOException, JCodecException {
-        File file = new File("./temp");
-
-        if (!file.mkdir() || !file.canWrite()) {
+        if (!dumpDir.mkdir() || !dumpDir.canWrite()) {
+            Message.error("Greška u sustavu!", "Dogodila se greška u sustavu.");
             throw new IOException("Dumping directory can't be created.");
         }
 
         // Set up the reference to the dumping directory in the main application
-        evaluationMainApp.setDumpDir(file);
+        evaluationMainApp.setDumpDir(dumpDir);
 
-        if (evaluationMainApp.isVideoDirSet()) {
-            primarySetup();
-        }
+        primarySetup();
     }
 
     /**
@@ -242,14 +228,14 @@ public class Controller implements Initializable {
     public void evaluate(ActionEvent actionEvent) {
         // Make sure video is loaded
         if (!evaluationMainApp.isVideoDirSet()) {
-            error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
+            Message.error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
 
             return;
         }
 
         // There are no frames to compare to?
         if (evaluationMainApp.getMarkedFrames().size() == 0) {
-            warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
+            Message.warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
 
             return;
         }
@@ -361,9 +347,9 @@ public class Controller implements Initializable {
 
                     if (neke.isSelected()) {
                         if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-                            warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti oblika: 1, 5, 74, 89, ...");
+                            Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti oblika: 1, 5, 74, 89, ...");
                         } else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-                            warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: 1, 5, 74, 89, ...");
+                            Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: 1, 5, 74, 89, ...");
                         } else {
                             String[] brojeviOkvira = upisi.getText().split(",");
                             int[] okviri = null;
@@ -375,7 +361,7 @@ public class Controller implements Initializable {
                                 okviri[i] = Integer.parseInt(brojeviOkvira[i]);
 
                                 if (numberOfFrames < okviri[i] || okviri[i] < 0) {
-                                    warning("Izvan raspona", "Broj ili neki od brojeva su veći od ukupnog " +
+                                    Message.warning("Izvan raspona", "Broj ili neki od brojeva su veći od ukupnog " +
                                             "broja okvira ili su manji od 0.");
                                     disableOpen = 1;
                                     break;
@@ -430,11 +416,11 @@ public class Controller implements Initializable {
                         }
                     } else {
                         if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-                            warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti" +
+                            Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti" +
                                     " " +
                                     "oblika: 1, 5, 74, 89, ...");
                         } else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-                            warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: " +
+                            Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: " +
                                     "1," +
                                     " " +
                                     "5, 74, 89, ...");
@@ -458,7 +444,7 @@ public class Controller implements Initializable {
                             for (int j = 0; i < lista.size(); j++) {
                                 s = s + lista.get(j) + "\t";
                             }
-                            warning("Krivi upis", "Okviri koji su navedeni, a još nisu označeni (ili su " +
+                            Message.warning("Krivi upis", "Okviri koji su navedeni, a još nisu označeni (ili su " +
                                     "manji" +
                                     " od 0) su: " + s);
                         }
@@ -777,38 +763,12 @@ public class Controller implements Initializable {
                             }
                     );
         } catch (IOException e) {
+            Message.error("Greška u sustavu!", "Datoteka s referentnim oznakama se ne može čitati.");
+
             e.printStackTrace();
         }
 
         return rectangles;
-    }
-
-    /**
-     * Show warning to the user.
-     *
-     * @param title   Alert title
-     * @param content Body of the alert
-     */
-    private void warning(String title, String content) {
-        Alert alert = new Alert(AlertType.WARNING);
-
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    /**
-     * Show error to the user.
-     *
-     * @param title   Alert title
-     * @param content Body of the alert
-     */
-    private void error(String title, String content) {
-        Alert alert = new Alert(AlertType.ERROR);
-
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 
     /**
@@ -849,7 +809,6 @@ public class Controller implements Initializable {
                 beginningY = mouseEvent.getY();
 
                 drawingInitialized = true;
-                System.out.println("Mouse click. X: " + mouseEvent.getX() + ", Y: " + mouseEvent.getY());
             }
         });
 
@@ -891,11 +850,16 @@ public class Controller implements Initializable {
             try {
                 setSelectedFrame(frameNumber);
             } catch (IOException | JCodecException e) {
-                //TODO error message
+                Message.error("Pogreška u sustavu", "Dogodila se pogreška u sustavu.");
+                e.printStackTrace();
             }
 
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
     }
+
+//    private String generateProperty() {
+//
+//    }
 }
