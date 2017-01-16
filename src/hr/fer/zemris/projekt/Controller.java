@@ -147,7 +147,7 @@ public class Controller implements Initializable {
     /**
      * List containing indices of removed frames.
      */
-    static List<Integer> removedFrames = new ArrayList<>();;
+    static List<Integer> removedFrames = new ArrayList<>();
 
 
     //TODO add marking on the frames
