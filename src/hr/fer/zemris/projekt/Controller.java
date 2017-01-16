@@ -144,6 +144,12 @@ public class Controller implements Initializable {
      */
     private List<javafx.scene.shape.Rectangle> drawnRectangles;
 
+    /**
+     * List containing indices of removed frames.
+     */
+    static List<Integer> removedFrames = new ArrayList<>();;
+
+
     //TODO add marking on the frames
 
     /**
@@ -897,5 +903,13 @@ public class Controller implements Initializable {
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
+    }
+
+    @FXML
+    public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException{
+        //TODO brisanje slika iz dumpDira, postavljanje na početni frame kada se izbrišu svi označeni frameovi
+        int selectedId = markedFramesList.getSelectionModel().getSelectedIndex();
+        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId).toString()));
+        markedFramesList.getItems().remove(selectedId);
     }
 }

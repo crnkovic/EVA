@@ -43,6 +43,9 @@
 
             <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0"
                     text="Spremi oznake"/>
+            <Separator layoutX="882.0" layoutY="10.0" orientation="VERTICAL" prefHeight="33.0" prefWidth="12.0" style="visibility: hidden" />
+            <Button fx:id="deleteMarksButton" mnemonicParsing="false" onAction="#deleteMarks" text="Izbriši oznake" />
+            <Separator layoutX="1012.0" layoutY="10.0" orientation="VERTICAL" prefHeight="33.0" prefWidth="0.0" style="visibility: hidden" />
         </HBox>
     </bottom>
     <top>

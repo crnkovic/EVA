@@ -179,6 +179,11 @@ public class EvaluationMain extends Application {
      * @return Marked frames
      */
     public Map<Integer, List<javafx.scene.shape.Rectangle>> getMarkedFrames() {
+        if(!Controller.removedFrames.isEmpty()){
+            for(int i : Controller.removedFrames){
+                markedFrames.remove(i);
+            }
+        }
         return markedFrames;
     }
 
