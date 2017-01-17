@@ -1,5 +1,6 @@
 package hr.fer.zemris.projekt;
 
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -18,6 +19,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -27,6 +31,7 @@ import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -142,6 +147,7 @@ public class Controller implements Initializable {
      * List containing drawn rectangles.
      */
     private List<javafx.scene.shape.Rectangle> drawnRectangles;
+    private List<javafx.scene.shape.Rectangle> blueRect = new LinkedList<>();
 
     /**
      * List containing indices of removed frames.
@@ -213,6 +219,31 @@ public class Controller implements Initializable {
         }
     }
 
+    @FXML
+    public void njihovo() throws IOException, JCodecException {
+        List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) frameSlider.getValue()));
+
+        setSelectedFrame(getFrameNumber((long) frameSlider.getValue()));
+        imagePane.getChildren().removeAll(blueRect);
+        blueRect.clear();
+        blueRect.addAll(rectangles);
+
+        for (Rectangle rectangle : blueRect) {
+            javafx.scene.shape.Rectangle newRectangle = new javafx.scene.shape.Rectangle(
+                    rectangle.getX(),
+                    rectangle.getY(),
+                    rectangle.getWidth(),
+                    rectangle.getHeight());
+
+            newRectangle.setDisable(false);
+            newRectangle.setFill(null);
+            newRectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+            newRectangle.setStrokeWidth(1);
+
+            imagePane.getChildren().add(newRectangle);
+        }
+    }
+
     /**
      * Called when user pressed the "choose evaluation file" button. File should contain all the ground truth references.
      * Sets up a reference to that file in the main application.
@@ -220,7 +251,7 @@ public class Controller implements Initializable {
      * @param actionEvent Event
      */
     @FXML
-    public void setEvaluationFile(ActionEvent actionEvent) {
+    public void setEvaluationFile(ActionEvent actionEvent) throws IOException, JCodecException {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Odaberite datoteku s referentnim oznakama");
 
@@ -242,13 +273,28 @@ public class Controller implements Initializable {
 
             return;
         }
+        if(evaluationMainApp.getEvaluationFile() == null){
+            Message.warning("Upozorenje!","Niste unijeli datoteku sa oznakama.");
+            return;
+        }
 
         // There are no frames to compare to?
         if (evaluationMainApp.getMarkedFrames().size() == 0) {
-            Message.warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
+            Message.warning("Upozorenje!", "Niste spremili oznake.");
 
             return;
         }
+        if(jaccardIndex.getText().isEmpty()){
+            Message.warning("Upozorenje!","Niste unijeli prag za Jaccardov index.");
+            return;
+        }
+        try {
+            Float.parseFloat(jaccardIndex.getText());
+        }catch (Exception e){
+            Message.warning("Upozorenje!","Niste unijeli pravilan izraz za Jaccardov index. Provjerite je li broj zadan s točkom.");
+            return;
+        }
+
 
         // Initialize default computed properties to 0
         int truePositives = 0;
@@ -259,7 +305,10 @@ public class Controller implements Initializable {
         for (int frameNumber : evaluationMainApp.getMarkedFrames().keySet()) {
             // Get ground truth rectangles and user-defined rectangles for this specific frame
             List<javafx.scene.shape.Rectangle> groundTruthRectangles = evaluationMainApp.getMarkedFrame(frameNumber);
+
+            // njihovi
             List<javafx.scene.shape.Rectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
+
 
             // Set false negatives count to all detected rectangles size, so we can decrement it once we hit a rectangle
             falseNegatives += detectedRectangles.size();
@@ -268,7 +317,7 @@ public class Controller implements Initializable {
                 boolean hit = false;
 
                 for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
-                    if (computeJaccardIndex(generatorRectangle, groundTruthRectangle) > Float.parseFloat(jaccardIndex.getText())) {
+                    if (computeJaccardIndex(groundTruthRectangle, generatorRectangle) > Float.parseFloat(jaccardIndex.getText())) {
                         // We have hit it, well done, increment the true positive and decrement the false negative!
                         hit = true;
                         truePositives++;
@@ -276,6 +325,7 @@ public class Controller implements Initializable {
 
                         break;
                     }
+//                    System.out.println("ne sijeku se");
                 }
 
                 // We haven't hit it? False positive it seems.
@@ -293,6 +343,9 @@ public class Controller implements Initializable {
         float recall = ComputationUtils.computeRecall(truePositives, falseNegatives);
         float precision = ComputationUtils.computePrecision(truePositives, falsePositives);
         float f1 = ComputationUtils.computeF1(recall, precision);
+        System.out.println("recall:"+recall);
+        System.out.println("precision:"+precision);
+        System.out.println("f1:"+f1);
 
         recallValue.setText(String.valueOf(recall) + "%");
         precisionValue.setText(String.valueOf(precision) + "%");
@@ -554,7 +607,14 @@ public class Controller implements Initializable {
         for (int frameNumber : frameNumbersList) {
             // Loop through the rectangles for this specific frame and write it to the file
             for (javafx.scene.shape.Rectangle label : evaluationMainApp.getMarkedFrame(frameNumber)) {
-                writer.write(label.toString() + System.lineSeparator());
+                writer.write("x = " + String.valueOf(label.getX()));
+                writer.write(", y = ");
+                writer.write(String.valueOf(izracunaj(label.getY())) + ", sirina = ");
+                writer.write(String.valueOf(label.getWidth()));
+                writer.write(", visina = ");
+                writer.write(String.valueOf(label.getHeight()));
+
+                writer.write(System.lineSeparator());
                 writer.flush();
             }
         }
@@ -601,13 +661,20 @@ public class Controller implements Initializable {
 
     @FXML
     public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException {
-        //TODO brisanje slika iz dumpDira, postavljanje na početni frame kada se izbrišu svi označeni frameovi
-        frameNumberField.setText("0");
-        frameSlider.setValue(0);
+        ObservableList<String> selectedIndices = markedFramesList.getSelectionModel().getSelectedItems();
 
-        int selectedId = markedFramesList.getSelectionModel().getSelectedIndex();
-        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId)));
-        markedFramesList.getItems().remove(selectedId);
+        selectedIndices.forEach(item -> {
+            int frame = Integer.parseInt(item);
+
+            evaluationMainApp.removeMarkedFrame(frame);
+            markedFramesList.getItems().remove(String.valueOf(frame));
+
+            try {
+                setSelectedFrame(frame);
+            } catch (IOException | JCodecException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 
@@ -677,7 +744,9 @@ public class Controller implements Initializable {
 
         // Remove rectangles that were drawn in the previous frame and collects all rectangles that were to be marked
         imagePane.getChildren().removeAll(drawnRectangles);
+        imagePane.getChildren().removeAll(blueRect);
         drawnRectangles.clear();
+        blueRect.clear();
         List<javafx.scene.shape.Rectangle> rectanglesToDraw = evaluationMainApp.getMarkedFrame(number);
 
         // There are any rectangles to be drawn?
@@ -725,11 +794,15 @@ public class Controller implements Initializable {
      * Delegates <i>computeJaccardIndex</i> method from the <b>ComputationUtils</b> helper class.
      *
      * @param markedRectangle Marked rectangle object
-     * @param gtR             Ground truth rectangle object
+     * @param generatorRect   Ground truth rectangle object
      * @return Computed index
      * @see <a href="http://en.wikipedia.org/wiki/Jaccard_index">Calculating the Jaccard index</a>
      */
-    private static double computeJaccardIndex(javafx.scene.shape.Rectangle markedRectangle, javafx.scene.shape.Rectangle gtR) {
+    private double computeJaccardIndex(javafx.scene.shape.Rectangle markedRectangle, javafx.scene.shape.Rectangle generatorRect) {
+
+        Dimension s = Toolkit.getDefaultToolkit().getScreenSize();
+
+        //System.out.println("multipier"+evaluationMainApp.getWidthMultiplier());
         return ComputationUtils.computeJaccardIndex(
                 // Marked rectangle properties
                 markedRectangle.getX(),
@@ -738,10 +811,10 @@ public class Controller implements Initializable {
                 markedRectangle.getHeight(),
 
                 // "Ground truth" rectangle properties
-                gtR.getX(),
-                gtR.getY(),
-                gtR.getWidth(),
-                gtR.getHeight()
+                generatorRect.getX(),
+                generatorRect.getY(),
+                generatorRect.getWidth(),
+                generatorRect.getHeight()
         );
     }
 
@@ -773,19 +846,18 @@ public class Controller implements Initializable {
                     .forEach(line -> {
                                 // Structure of this variable is defined in this method's JavaDoc.
                                 String[] property = line.split(",");
-
                                 rectangles.add(new javafx.scene.shape.Rectangle(
-                                        Double.parseDouble(property[5]),
-                                        Double.parseDouble(property[6]),
-                                        Double.parseDouble(property[7]),
-                                        Double.parseDouble(property[8]))
+                                        Double.parseDouble(property[5])*(820./1280),
+                                        Double.parseDouble(property[6])*(820./1280)-Double.parseDouble(property[8])*(820./1280),
+                                        Double.parseDouble(property[7])*(820./1280),
+                                        Double.parseDouble(property[8])*(820./1280))
                                 );
                             }
                     );
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        System.out.println("rect:"+rectangles);
         return rectangles;
     }
 
@@ -825,6 +897,9 @@ public class Controller implements Initializable {
             if (evaluationMainApp.isDumpingDirSet() && evaluationMainApp.isVideoDirSet()) {
                 beginningX = mouseEvent.getX();
                 beginningY = mouseEvent.getY();
+
+                System.out.println(izracunaj(beginningX));
+                System.out.println(izracunaj(beginningY));
 
                 drawingInitialized = true;
             }
@@ -876,5 +951,10 @@ public class Controller implements Initializable {
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
+    }
+
+    public double izracunaj(double x) {
+        System.out.println(evaluationMainApp.getWidthMultiplier());
+        return x * evaluationMainApp.getWidthMultiplier();
     }
 }

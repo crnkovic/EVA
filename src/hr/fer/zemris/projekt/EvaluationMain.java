@@ -33,7 +33,8 @@ public class EvaluationMain extends Application {
     /**
      * Rectangle area multiplier.
      */
-    private int rectangleSizeMultiplier = 1;
+    private double widthMultiplier = 1;
+    private double heightMultiplier = 1;
 
     /**
      * Map of marked frames.
@@ -54,8 +55,12 @@ public class EvaluationMain extends Application {
     /**
      * @return int
      */
-    public int getRectangleSizeMultiplier() {
-        return rectangleSizeMultiplier;
+    public double getWidthMultiplier() {
+        return widthMultiplier;
+    }
+
+    public double getHeightMultiplier() {
+        return heightMultiplier;
     }
 
     /**
@@ -70,7 +75,9 @@ public class EvaluationMain extends Application {
 
         // Get first frame then calculate the width of the rectangle
         BufferedImage bufferedImage = VideoUtil.getFrame(videoPath, 0);
-        rectangleSizeMultiplier = 900 / bufferedImage.getWidth();
+
+//        widthMultiplier = (double) bufferedImage.getWidth() / 820;
+//        heightMultiplier = (double) bufferedImage.getHeight() / 465;
 
         // Clean the dumping directory when we set video path.
         if (isDumpingDirSet()) {
@@ -184,6 +191,10 @@ public class EvaluationMain extends Application {
         }
 
         return markedFrames;
+    }
+
+    public void removeMarkedFrame(int id) {
+        markedFrames.remove(id);
     }
 
     /**

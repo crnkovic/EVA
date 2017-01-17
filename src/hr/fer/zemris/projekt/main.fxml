@@ -22,8 +22,8 @@
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
-                       preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fx:id="footballFieldImage"  fitHeight="470.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+
             </ImageView>
         </Pane>
     </left>
@@ -67,11 +67,21 @@
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0;-fx-padding: 0 0 5 0">
                 <Label prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0"/>
                 <TextField fx:id="jaccardIndex" layoutX="150.0" layoutY="8.0" prefHeight="25.0" prefWidth="74.0"
-                           AnchorPane.rightAnchor="0.0"/>
+                           AnchorPane.rightAnchor="0.0" text="0.1"/>
             </AnchorPane>
 
             <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0"
                     prefWidth="200.0" text="Evaluacija" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>10</top>
+                        <bottom>10</bottom>
+                    </Insets>
+                </VBox.margin>
+            </Button>
+
+            <Button fx:id="evaluateButton2" mnemonicParsing="false" onAction="#njihovo" prefHeight="26.0"
+                    prefWidth="200.0" text="Njihovo" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
                         <top>10</top>
