@@ -74,7 +74,7 @@ public class EvaluationMain extends Application {
 
         // Clean the dumping directory when we set video path.
         if (isDumpingDirSet()) {
-            cleanDumpFolder();
+            removeDumpDir();
         }
     }
 
@@ -93,7 +93,9 @@ public class EvaluationMain extends Application {
      * Cleans up dump folder.
      * Deletes all files inside the directory.
      */
-    private void cleanDumpFolder() {
+    public void cleanDumpFolder() {
+        if (!isDumpingDirSet()) return;
+
         File[] files = dumpDir.listFiles();
 
         // If empty, may produce null, so we gotta check.
@@ -130,10 +132,6 @@ public class EvaluationMain extends Application {
      * @param dumpDir Dumping directory
      */
     public void setDumpDir(File dumpDir) {
-        if (isDumpingDirSet()) {
-            removeDumpDir();
-        }
-
         this.dumpDir = dumpDir;
     }
 

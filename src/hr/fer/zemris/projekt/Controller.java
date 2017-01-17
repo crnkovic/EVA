@@ -196,25 +196,17 @@ public class Controller implements Initializable {
         // Reset ground truth file
         evaluationMainApp.setEvaluationFile(null);
 
-        setImageDumpDir();
-        primarySetup();
-    }
+        File tempDir = new File("./temp");
+        if (tempDir.mkdir()) {
+            System.out.println("test");
+        }
 
-    /**
-     * Sets up image directory reference in the main application and runs the {@link #primarySetup() primarySetup} method if the video directory is defined.
-     *
-     * @throws IOException     IOException
-     * @throws JCodecException JCodecException
-     */
-    private void setImageDumpDir() throws IOException, JCodecException {
-        File file = new File("./temp");
-
-        if (!file.mkdir() || !file.canWrite()) {
-            throw new IOException("Dumping directory can't be created.");
+        if (!tempDir.canWrite()) {
+            throw new IOException("Ne mogu pisati.");
         }
 
         // Set up the reference to the dumping directory in the main application
-        evaluationMainApp.setDumpDir(file);
+        evaluationMainApp.setDumpDir(tempDir);
 
         if (evaluationMainApp.isVideoDirSet()) {
             primarySetup();
