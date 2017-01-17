@@ -22,7 +22,7 @@
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage" layoutY="40" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
+            <ImageView fx:id="footballFieldImage" fitHeight="600.0" fitWidth="820.0" pickOnBounds="true"
                        preserveRatio="true" BorderPane.alignment="CENTER">
             </ImageView>
         </Pane>

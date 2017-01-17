@@ -8,7 +8,6 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -74,7 +73,7 @@ public class Controller implements Initializable {
      * List of marked frames.
      */
     @FXML
-    private ListView markedFramesList;
+    private ListView<String> markedFramesList;
 
     /**
      * Recall value.
@@ -176,13 +175,13 @@ public class Controller implements Initializable {
      */
     @FXML
     public void setVideoAndSetUp(ActionEvent actionEvent) throws FrameGrabber.Exception, IOException, JCodecException {
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Video", videoExtensions);
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Video (" + String.join(", ", videoExtensions).replaceAll("\\*", "") + ")", videoExtensions);
 
         // Show file chooser to the user and let it choose a video
         // Only accepts video extensions defined in a class property
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(extFilter);
-        fileChooser.setTitle("Odaberi video");
+        fileChooser.setTitle("Odaberite video za evaluaciju");
         File file = fileChooser.showOpenDialog(scene.getWindow());
 
         // Set path to the video in the main application and collect number of frames from the video
@@ -194,12 +193,11 @@ public class Controller implements Initializable {
         frameSlider.setMin(0);
         frameSlider.setBlockIncrement(50);
 
+        // Reset ground truth file
         evaluationMainApp.setEvaluationFile(null);
 
         setImageDumpDir();
         primarySetup();
-
-        System.out.println(evaluationMainApp.getDumpDir());
     }
 
     /**
@@ -248,14 +246,14 @@ public class Controller implements Initializable {
     public void evaluate(ActionEvent actionEvent) {
         // Make sure video is loaded
         if (!evaluationMainApp.isVideoDirSet()) {
-            error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
+            Message.error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
 
             return;
         }
 
         // There are no frames to compare to?
         if (evaluationMainApp.getMarkedFrames().size() == 0) {
-            warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
+            Message.warning("Nisu učitane referentne oznake!", "Molimo učitajte referentne oznake te pokušajte ponovno.");
 
             return;
         }
@@ -367,9 +365,9 @@ public class Controller implements Initializable {
 
                     if (neke.isSelected()) {
                         if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-                            warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti oblika: 1, 5, 74, 89, ...");
+                            Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti oblika: 1, 5, 74, 89, ...");
                         } else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-                            warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: 1, 5, 74, 89, ...");
+                            Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: 1, 5, 74, 89, ...");
                         } else {
                             String[] brojeviOkvira = upisi.getText().split(",");
                             int[] okviri = null;
@@ -381,8 +379,7 @@ public class Controller implements Initializable {
                                 okviri[i] = Integer.parseInt(brojeviOkvira[i]);
 
                                 if (numberOfFrames < okviri[i] || okviri[i] < 0) {
-                                    warning("Izvan raspona", "Broj ili neki od brojeva su veći od ukupnog " +
-                                            "broja okvira ili su manji od 0.");
+                                    Message.warning("Izvan raspona", "Broj ili neki od brojeva su veći od ukupnog broja okvira ili su manji od 0.");
                                     disableOpen = 1;
                                     break;
                                 }
@@ -436,11 +433,11 @@ public class Controller implements Initializable {
                         }
                     } else {
                         if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-                            warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti" +
+                            Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti" +
                                     " " +
                                     "oblika: 1, 5, 74, 89, ...");
                         } else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-                            warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: " +
+                            Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: " +
                                     "1," +
                                     " " +
                                     "5, 74, 89, ...");
@@ -464,7 +461,7 @@ public class Controller implements Initializable {
                             for (int j = 0; i < lista.size(); j++) {
                                 s = s + lista.get(j) + "\t";
                             }
-                            warning("Krivi upis", "Okviri koji su navedeni, a još nisu označeni (ili su " +
+                            Message.warning("Krivi upis", "Okviri koji su navedeni, a još nisu označeni (ili su " +
                                     "manji" +
                                     " od 0) su: " + s);
                         }
@@ -611,10 +608,13 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException{
+    public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException {
         //TODO brisanje slika iz dumpDira, postavljanje na početni frame kada se izbrišu svi označeni frameovi
+        frameNumberField.setText("0");
+        frameSlider.setValue(0);
+
         int selectedId = markedFramesList.getSelectionModel().getSelectedIndex();
-        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId).toString()));
+        removedFrames.add(Integer.parseInt(markedFramesList.getItems().get(selectedId)));
         markedFramesList.getItems().remove(selectedId);
     }
 
@@ -798,34 +798,6 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Show warning to the user.
-     *
-     * @param title   Alert title
-     * @param content Body of the alert
-     */
-    private void warning(String title, String content) {
-        Alert alert = new Alert(AlertType.WARNING);
-
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    /**
-     * Show error to the user.
-     *
-     * @param title   Alert title
-     * @param content Body of the alert
-     */
-    private void error(String title, String content) {
-        Alert alert = new Alert(AlertType.ERROR);
-
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    /**
      * Helper method that sets the label next to the slider depending on its position.
      *
      * @return Frame number depending on the slider position
@@ -863,7 +835,6 @@ public class Controller implements Initializable {
                 beginningY = mouseEvent.getY();
 
                 drawingInitialized = true;
-                System.out.println("Mouse click. X: " + mouseEvent.getX() + ", Y: " + mouseEvent.getY());
             }
         });
 
@@ -887,8 +858,8 @@ public class Controller implements Initializable {
             if (drawingInitialized) {
                 //TODO edit boudns, now only works for the left one and not for the on on the bottom need a better solution
                 if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight()) {
-
                     javafx.scene.shape.Rectangle rectangle = drawRectangle(mouseEvent.getX(), mouseEvent.getY());
+
                     imagePane.getChildren().add(rectangle);
                     imagePane.getChildren().remove(lastRectangle);
                     drawnRectangles.add(rectangle);
@@ -900,12 +871,14 @@ public class Controller implements Initializable {
 
         markedFramesList.setCellFactory(TextFieldListCell.forListView());
         markedFramesList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            int frameNumber = Integer.parseInt(newValue.toString());
+            int frameNumber = Integer.parseInt(newValue);
 
             try {
                 setSelectedFrame(frameNumber);
             } catch (IOException | JCodecException e) {
-                //TODO error message
+                Message.error("Greška!", "Dogodila se greška u sustavu.");
+
+                e.printStackTrace();
             }
 
             frameNumberField.setText(String.valueOf(frameNumber));
