@@ -38,14 +38,14 @@
     -fx-text-fill: #333;
 }
 
-#evaluateButton {
+#evaluateButton, #loadGeneratedRectangles {
     -fx-background-radius: 0;
     -fx-text-fill: #FFF;
     -fx-background-color: #2196F3;
     -fx-padding: 7 15;
 }
 
-#evaluateButton:hover {
+#evaluateButton:hover, #loadGeneratedRectangles:hover {
     -fx-cursor: hand;
     -fx-background-color: #0c83e1;
 }
@@ -59,7 +59,7 @@
     -fx-padding: 7 15;
 }
 
-#saveMarksButton:hover, #moreInfoButton:hover {
+#saveMarksButton:hover, #moreInfoButton:hover, #deleteMarksButton:hover {
     -fx-cursor: hand;
     -fx-background-color: #d6d6d6;
 }

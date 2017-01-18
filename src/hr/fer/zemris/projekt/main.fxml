@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-            xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
@@ -62,12 +62,12 @@
         </MenuBar>
     </top>
     <right>
-        <VBox prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 5 10 10 10" BorderPane.alignment="CENTER">
+        <VBox  prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 5 10 10 10" BorderPane.alignment="CENTER">
             <AnchorPane prefHeight="28.0" prefWidth="200.0"
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0;-fx-padding: 0 0 5 0">
                 <Label prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0"/>
                 <TextField fx:id="jaccardIndex" layoutX="150.0" layoutY="8.0" prefHeight="25.0" prefWidth="74.0"
-                           AnchorPane.rightAnchor="0.0" text="0.1"/>
+                           AnchorPane.rightAnchor="0.0" />
             </AnchorPane>
 
             <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0"
@@ -80,8 +80,8 @@
                 </VBox.margin>
             </Button>
 
-            <Button fx:id="evaluateButton2" mnemonicParsing="false" onAction="#njihovo" prefHeight="26.0"
-                    prefWidth="200.0" text="Njihovo" VBox.vgrow="ALWAYS">
+            <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#njihovo" prefHeight="26.0"
+                    prefWidth="200.0" text="Prikaži detektirane oznake" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
                         <top>10</top>

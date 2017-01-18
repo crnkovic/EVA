@@ -20,7 +20,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.*;
-import javafx.scene.shape.*;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -32,6 +31,7 @@ import org.jcodec.api.JCodecException;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -136,7 +136,7 @@ public class Controller implements Initializable {
     /**
      * Acceptable video extensions.
      */
-    private String[] videoExtensions = {"*.mp4", "*.avi", "*.mkv"};
+    private String[] videoExtensions = {"*.mp4", "*.avi", "*.mkv", "*.webm", "*.mov"};
 
     /**
      * Contains last drawn rectangle.
@@ -147,15 +147,12 @@ public class Controller implements Initializable {
      * List containing drawn rectangles.
      */
     private List<javafx.scene.shape.Rectangle> drawnRectangles;
-    private List<javafx.scene.shape.Rectangle> blueRect = new LinkedList<>();
+    private Set<javafx.scene.shape.Rectangle> generatedRectangles = new HashSet<>();
 
     /**
      * List containing indices of removed frames.
      */
     static List<Integer> removedFrames = new ArrayList<>();
-
-
-    //TODO add marking on the frames
 
     /**
      * Called when the frame slider's position is changed.
@@ -172,7 +169,7 @@ public class Controller implements Initializable {
 
     /**
      * Called when user pressed the "choose video" button. Only accepts video extensions.
-     * Collects number of frames in the video, sets up frame slider and runs the {@link #primarySetup() primarySetup} method.
+     * Collects number of frames in the video, sets up frame slider.
      *
      * @param actionEvent Event
      * @throws FrameGrabber.Exception Exception
@@ -203,44 +200,40 @@ public class Controller implements Initializable {
         evaluationMainApp.setEvaluationFile(null);
 
         File tempDir = new File("./temp");
-        if (tempDir.mkdir()) {
-            System.out.println("test");
-        }
+        tempDir.mkdir();
 
         if (!tempDir.canWrite()) {
-            throw new IOException("Ne mogu pisati.");
+            throw new IOException("Ne može se pisati u \"temp\" datoteku.");
         }
 
         // Set up the reference to the dumping directory in the main application
         evaluationMainApp.setDumpDir(tempDir);
 
-        if (evaluationMainApp.isVideoDirSet()) {
-            primarySetup();
-        }
+        setSelectedFrame(1);
+        setLabelForSliderValue();
+
+        frameSlider.setDisable(false);
     }
 
     @FXML
     public void njihovo() throws IOException, JCodecException {
+        if (evaluationMainApp.getEvaluationFile() == null) {
+            Message.error("Greška!", "Niste učitali datoteku s detektiranim oznakama.");
+
+            return;
+        }
+
         List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) frameSlider.getValue()));
 
-        setSelectedFrame(getFrameNumber((long) frameSlider.getValue()));
-        imagePane.getChildren().removeAll(blueRect);
-        blueRect.clear();
-        blueRect.addAll(rectangles);
+        drawnRectangles.addAll(rectangles);
 
-        for (Rectangle rectangle : blueRect) {
-            javafx.scene.shape.Rectangle newRectangle = new javafx.scene.shape.Rectangle(
-                    rectangle.getX(),
-                    rectangle.getY(),
-                    rectangle.getWidth(),
-                    rectangle.getHeight());
+        for (Rectangle rectangle : rectangles) {
+            rectangle.setDisable(false);
+            rectangle.setFill(null);
+            rectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+            rectangle.setStrokeWidth(1);
 
-            newRectangle.setDisable(false);
-            newRectangle.setFill(null);
-            newRectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
-            newRectangle.setStrokeWidth(1);
-
-            imagePane.getChildren().add(newRectangle);
+            imagePane.getChildren().add(rectangle);
         }
     }
 
@@ -273,8 +266,8 @@ public class Controller implements Initializable {
 
             return;
         }
-        if(evaluationMainApp.getEvaluationFile() == null){
-            Message.warning("Upozorenje!","Niste unijeli datoteku sa oznakama.");
+        if (evaluationMainApp.getEvaluationFile() == null) {
+            Message.warning("Upozorenje!", "Niste unijeli datoteku sa oznakama.");
             return;
         }
 
@@ -284,14 +277,14 @@ public class Controller implements Initializable {
 
             return;
         }
-        if(jaccardIndex.getText().isEmpty()){
-            Message.warning("Upozorenje!","Niste unijeli prag za Jaccardov index.");
+        if (jaccardIndex.getText().isEmpty()) {
+            Message.warning("Upozorenje!", "Niste unijeli prag za Jaccardov index.");
             return;
         }
         try {
             Float.parseFloat(jaccardIndex.getText());
-        }catch (Exception e){
-            Message.warning("Upozorenje!","Niste unijeli pravilan izraz za Jaccardov index. Provjerite je li broj zadan s točkom.");
+        } catch (Exception e) {
+            Message.warning("Upozorenje!", "Niste unijeli pravilan izraz za Jaccardov index. Provjerite je li broj zadan s točkom.");
             return;
         }
 
@@ -305,10 +298,7 @@ public class Controller implements Initializable {
         for (int frameNumber : evaluationMainApp.getMarkedFrames().keySet()) {
             // Get ground truth rectangles and user-defined rectangles for this specific frame
             List<javafx.scene.shape.Rectangle> groundTruthRectangles = evaluationMainApp.getMarkedFrame(frameNumber);
-
-            // njihovi
             List<javafx.scene.shape.Rectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
-
 
             // Set false negatives count to all detected rectangles size, so we can decrement it once we hit a rectangle
             falseNegatives += detectedRectangles.size();
@@ -343,9 +333,9 @@ public class Controller implements Initializable {
         float recall = ComputationUtils.computeRecall(truePositives, falseNegatives);
         float precision = ComputationUtils.computePrecision(truePositives, falsePositives);
         float f1 = ComputationUtils.computeF1(recall, precision);
-        System.out.println("recall:"+recall);
-        System.out.println("precision:"+precision);
-        System.out.println("f1:"+f1);
+        System.out.println("recall:" + recall);
+        System.out.println("precision:" + precision);
+        System.out.println("f1:" + f1);
 
         recallValue.setText(String.valueOf(recall) + "%");
         precisionValue.setText(String.valueOf(precision) + "%");
@@ -607,14 +597,7 @@ public class Controller implements Initializable {
         for (int frameNumber : frameNumbersList) {
             // Loop through the rectangles for this specific frame and write it to the file
             for (javafx.scene.shape.Rectangle label : evaluationMainApp.getMarkedFrame(frameNumber)) {
-                writer.write("x = " + String.valueOf(label.getX()));
-                writer.write(", y = ");
-                writer.write(String.valueOf(izracunaj(label.getY())) + ", sirina = ");
-                writer.write(String.valueOf(label.getWidth()));
-                writer.write(", visina = ");
-                writer.write(String.valueOf(label.getHeight()));
-
-                writer.write(System.lineSeparator());
+                writer.write(label + System.lineSeparator());
                 writer.flush();
             }
         }
@@ -716,19 +699,6 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Initialize empty "screen" to the user. Resets the selected frame, resets slider and its label.
-     *
-     * @throws IOException     IOException
-     * @throws JCodecException JCodecException
-     */
-    private void primarySetup() throws IOException, JCodecException {
-        setSelectedFrame(1);
-        setLabelForSliderValue();
-
-        frameSlider.setDisable(false);
-    }
-
-    /**
      * "Sets" the selected frame by displaying it and draws any rectangles that were previously drawn.
      *
      * @param number Frame number
@@ -742,12 +712,9 @@ public class Controller implements Initializable {
         // Display (draw) the frame to the user
         footballFieldImage.setImage(image);
 
-        // Remove rectangles that were drawn in the previous frame and collects all rectangles that were to be marked
-        imagePane.getChildren().removeAll(drawnRectangles);
-        imagePane.getChildren().removeAll(blueRect);
-        drawnRectangles.clear();
-        blueRect.clear();
         List<javafx.scene.shape.Rectangle> rectanglesToDraw = evaluationMainApp.getMarkedFrame(number);
+
+        imagePane.getChildren().removeAll(drawnRectangles);
 
         // There are any rectangles to be drawn?
         if (rectanglesToDraw != null) {
@@ -800,8 +767,6 @@ public class Controller implements Initializable {
      */
     private double computeJaccardIndex(javafx.scene.shape.Rectangle markedRectangle, javafx.scene.shape.Rectangle generatorRect) {
 
-        Dimension s = Toolkit.getDefaultToolkit().getScreenSize();
-
         //System.out.println("multipier"+evaluationMainApp.getWidthMultiplier());
         return ComputationUtils.computeJaccardIndex(
                 // Marked rectangle properties
@@ -847,17 +812,17 @@ public class Controller implements Initializable {
                                 // Structure of this variable is defined in this method's JavaDoc.
                                 String[] property = line.split(",");
                                 rectangles.add(new javafx.scene.shape.Rectangle(
-                                        Double.parseDouble(property[5])*(820./1280),
-                                        Double.parseDouble(property[6])*(820./1280)-Double.parseDouble(property[8])*(820./1280),
-                                        Double.parseDouble(property[7])*(820./1280),
-                                        Double.parseDouble(property[8])*(820./1280))
+                                        Double.parseDouble(property[5]) * (820. / 1280),
+                                        Double.parseDouble(property[6]) * (820. / 1280) - Double.parseDouble(property[8]) * (820. / 1280),
+                                        Double.parseDouble(property[7]) * (820. / 1280),
+                                        Double.parseDouble(property[8]) * (820. / 1280))
                                 );
                             }
                     );
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("rect:"+rectangles);
+
         return rectangles;
     }
 
@@ -897,9 +862,6 @@ public class Controller implements Initializable {
             if (evaluationMainApp.isDumpingDirSet() && evaluationMainApp.isVideoDirSet()) {
                 beginningX = mouseEvent.getX();
                 beginningY = mouseEvent.getY();
-
-                System.out.println(izracunaj(beginningX));
-                System.out.println(izracunaj(beginningY));
 
                 drawingInitialized = true;
             }
@@ -951,10 +913,5 @@ public class Controller implements Initializable {
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
-    }
-
-    public double izracunaj(double x) {
-        System.out.println(evaluationMainApp.getWidthMultiplier());
-        return x * evaluationMainApp.getWidthMultiplier();
     }
 }
