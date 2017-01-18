@@ -38,7 +38,7 @@
 
             <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:"/>
             <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT"/>
-            <TextField fx:id="frameNumberTextField" prefHeight="19" prefWidth="70" onKeyReleased="#handleEnterPressed"/>
+            <TextField fx:id="frameNumberTextField" prefHeight="19" prefWidth="70" onKeyReleased="#handleEnterPressed" />
 
             <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden"/>
 

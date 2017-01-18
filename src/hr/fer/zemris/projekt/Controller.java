@@ -203,7 +203,7 @@ public class Controller implements Initializable {
         // Set up slider
         frameSlider.setMax(numberOfFrames / FRAME_HOP);
         frameSlider.setMin(0);
-        frameSlider.setBlockIncrement(50);
+        frameSlider.setBlockIncrement(FRAME_HOP);
 
         // Reset ground truth file
         evaluationMainApp.setEvaluationFile(null);
@@ -235,9 +235,6 @@ public class Controller implements Initializable {
         List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) frameSlider.getValue()));
 
         drawnRectangles.addAll(rectangles);
-
-        System.out.println(frameSlider.getValue());
-        System.out.println(getFrameNumber((long) frameSlider.getValue()));
 
         for (Rectangle rectangle : rectangles) {
             rectangle.setDisable(false);
@@ -850,7 +847,7 @@ public class Controller implements Initializable {
      * @return Frame number depending on the slider position
      */
     private int setLabelForSliderValue() {
-        int frameNumber = getFrameNumber(Math.round(frameSlider.getValue()));
+        int frameNumber = getFrameNumber((long) Math.ceil(frameSlider.getValue()));
         frameNumberField.setText(String.valueOf(frameNumber));
 
         return frameNumber;
@@ -875,9 +872,18 @@ public class Controller implements Initializable {
     @FXML
     public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException {
         if (e.getCode() == KeyCode.ENTER) {
-            setSelectedFrame(Integer.parseInt(frameNumberTextField.getText()));
+            int broj;
 
-            frameSlider.setValue(Integer.parseInt(frameNumberTextField.getText()) / FRAME_HOP);
+            try {
+                broj = getFrameNumber((long) Math.ceil(Integer.valueOf(frameNumberTextField.getText()) / 15));
+            } catch (NumberFormatException ex) {
+                Message.warning("Upozorenje!", "Niste unijeli cijeli broj.");
+
+                return;
+            }
+
+            setSelectedFrame(broj);
+            frameSlider.setValue(broj / FRAME_HOP);
             setLabelForSliderValue();
             frameNumberTextField.clear();
         }
