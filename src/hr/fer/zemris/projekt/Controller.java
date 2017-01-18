@@ -935,7 +935,7 @@ public class Controller implements Initializable {
         // User is drawing the rectangle right now!
         footballFieldImage.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseEvent -> {
             if (drawingInitialized) {
-                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight()) {
+                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight() && mouseEvent.getX() > 0 && mouseEvent.getY() > 0) {
                     javafx.scene.shape.Rectangle rectangle = drawRectangle(mouseEvent.getX(), mouseEvent.getY());
 
                     imagePane.getChildren().remove(lastRectangle);
