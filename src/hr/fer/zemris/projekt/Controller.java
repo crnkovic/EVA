@@ -301,7 +301,7 @@ public class Controller implements Initializable {
             List<javafx.scene.shape.Rectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
 
             // Set false negatives count to all detected rectangles size, so we can decrement it once we hit a rectangle
-            falseNegatives += detectedRectangles.size();
+            falseNegatives += groundTruthRectangles.size();
 
             for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
                 boolean hit = false;
@@ -715,6 +715,7 @@ public class Controller implements Initializable {
         List<javafx.scene.shape.Rectangle> rectanglesToDraw = evaluationMainApp.getMarkedFrame(number);
 
         imagePane.getChildren().removeAll(drawnRectangles);
+        drawnRectangles.clear();
 
         // There are any rectangles to be drawn?
         if (rectanglesToDraw != null) {
