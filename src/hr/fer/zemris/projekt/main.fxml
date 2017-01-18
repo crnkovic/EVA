@@ -22,7 +22,7 @@
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage"  fitHeight="470.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fx:id="footballFieldImage" fitHeight="470.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
 
             </ImageView>
         </Pane>
@@ -38,6 +38,7 @@
 
             <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:"/>
             <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT"/>
+            <TextField fx:id="frameNumberTextField" prefHeight="19" prefWidth="70" onKeyReleased="#handleEnterPressed"/>
 
             <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden"/>
 
@@ -56,8 +57,7 @@
                           text="Odaberite datoteku s referentnim podacima"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
-                <MenuItem mnemonicParsing="false" onAction="#saveCurrentFrame" text="Spremi frameove"/>
-                <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi datoteku s oznakama"/>
+                <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>
             </Menu>
         </MenuBar>
     </top>
