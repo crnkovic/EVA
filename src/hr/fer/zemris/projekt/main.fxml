@@ -54,7 +54,7 @@
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
                 <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile"
-                          text="Odaberite datoteku s referentnim podacima"/>
+                          text="Odaberite datoteku s trajektorijama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>
