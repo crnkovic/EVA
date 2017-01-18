@@ -4,7 +4,6 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -78,8 +77,6 @@ public class Controller implements Initializable {
      */
     @FXML
     private ImageView footballFieldImage;
-
-    private boolean selected = false;
 
     private Rectangle selectedId = null;
 
@@ -159,7 +156,6 @@ public class Controller implements Initializable {
      * List containing drawn rectangles.
      */
     private List<javafx.scene.shape.Rectangle> drawnRectangles;
-    private Set<javafx.scene.shape.Rectangle> generatedRectangles = new HashSet<>();
 
     /**
      * List containing indices of removed frames.
@@ -239,6 +235,9 @@ public class Controller implements Initializable {
         List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) frameSlider.getValue()));
 
         drawnRectangles.addAll(rectangles);
+
+        System.out.println(frameSlider.getValue());
+        System.out.println(getFrameNumber((long) frameSlider.getValue()));
 
         for (Rectangle rectangle : rectangles) {
             rectangle.setDisable(false);
@@ -831,10 +830,10 @@ public class Controller implements Initializable {
                                 // Structure of this variable is defined in this method's JavaDoc.
                                 String[] property = line.split(",");
                                 rectangles.add(new javafx.scene.shape.Rectangle(
-                                        Double.parseDouble(property[5]) * (820. / 1280),
-                                        Double.parseDouble(property[6]) * (820. / 1280) - Double.parseDouble(property[8]) * (820. / 1280),
-                                        Double.parseDouble(property[7]) * (820. / 1280),
-                                        Double.parseDouble(property[8]) * (820. / 1280))
+                                        Double.parseDouble(property[5]) * evaluationMainApp.getWidthMultiplier(),
+                                        Double.parseDouble(property[6]) * evaluationMainApp.getWidthMultiplier() - Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier(),
+                                        Double.parseDouble(property[7]) * evaluationMainApp.getWidthMultiplier(),
+                                        Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier())
                                 );
                             }
                     );

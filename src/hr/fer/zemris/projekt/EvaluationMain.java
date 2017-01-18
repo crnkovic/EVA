@@ -35,7 +35,6 @@ public class EvaluationMain extends Application {
      * Rectangle area multiplier.
      */
     private double widthMultiplier = 1;
-    private double heightMultiplier = 1;
 
     /**
      * Map of marked frames.
@@ -60,10 +59,6 @@ public class EvaluationMain extends Application {
         return widthMultiplier;
     }
 
-    public double getHeightMultiplier() {
-        return heightMultiplier;
-    }
-
     /**
      * Set video file path and clean up the dumping directory so we have a fresh directory.
      *
@@ -77,8 +72,7 @@ public class EvaluationMain extends Application {
         // Get first frame then calculate the width of the rectangle
         BufferedImage bufferedImage = VideoUtil.getFrame(videoPath, 0);
 
-//        widthMultiplier = (double) bufferedImage.getWidth() / 820;
-//        heightMultiplier = (double) bufferedImage.getHeight() / 465;
+        widthMultiplier = 820. / bufferedImage.getWidth();
 
         // Clean the dumping directory when we set video path.
         if (isDumpingDirSet()) {
