@@ -314,10 +314,11 @@ public class Controller implements Initializable {
             // Set false negatives count to all detected rectangles size, so we can decrement it once we hit a rectangle
             falseNegatives += groundTruthRectangles.size();
 
-            for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
+            for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
                 boolean hit = false;
 
-                for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
+                System.out.println("asasddsa");
+                for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
                     if (computeJaccardIndex(groundTruthRectangle, generatorRectangle) > Float.parseFloat(jaccardIndex.getText())) {
                         // We have hit it, well done, increment the true positive and decrement the false negative!
                         hit = true;
@@ -326,7 +327,6 @@ public class Controller implements Initializable {
 
                         break;
                     }
-//                    System.out.println("ne sijeku se");
                 }
 
                 // We haven't hit it? False positive it seems.
@@ -904,9 +904,6 @@ public class Controller implements Initializable {
                 beginningY = mouseEvent.getY();
 
                 selectedRectangle = null;
-
-                System.out.println(evaluationMainApp.getMarkedFrames());
-
                 drawingInitialized = true;
 
                 for (Rectangle rectangle : drawnRectangles) {
@@ -965,7 +962,6 @@ public class Controller implements Initializable {
 
                     i++;
                 }
-                System.out.println(i);
 
                 drawnRectangles.get(i).setStroke(javafx.scene.paint.Color.RED);
 
@@ -1023,5 +1019,9 @@ public class Controller implements Initializable {
             frameNumberField.setText(String.valueOf(frameNumber));
             frameSlider.setValue(frameNumber / FRAME_HOP);
         });
+    }
+
+    private void focusNextRectangle(int i) {
+
     }
 }
