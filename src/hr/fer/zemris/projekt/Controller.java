@@ -8,9 +8,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.image.Image;
@@ -21,8 +21,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.*;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -32,10 +30,7 @@ import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
-import javax.xml.soap.Text;
 import java.awt.*;
-import java.awt.Color;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -78,7 +73,10 @@ public class Controller implements Initializable {
     @FXML
     private ImageView footballFieldImage;
 
-    private Rectangle selectedId = null;
+    /**
+     * Rectangle in focus (selected one)
+     */
+    private Rectangle selectedRectangle = null;
 
     /**
      * List of marked frames.
@@ -149,6 +147,9 @@ public class Controller implements Initializable {
      */
     private javafx.scene.shape.Rectangle lastRectangle;
 
+    /**
+     * Text field for entering frame number.
+     */
     @FXML
     private TextField frameNumberTextField;
 
@@ -232,7 +233,7 @@ public class Controller implements Initializable {
             return;
         }
 
-        List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) frameSlider.getValue()));
+        List<javafx.scene.shape.Rectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) Math.floor(frameSlider.getValue())));
 
         drawnRectangles.addAll(rectangles);
 
@@ -714,7 +715,7 @@ public class Controller implements Initializable {
      * @throws JCodecException JCodecException
      */
     private void setSelectedFrame(int number) throws IOException, JCodecException {
-        selectedId = null;
+        selectedRectangle = null;
 
         for (Rectangle drawnRectangle : drawnRectangles) {
             drawnRectangle.setStroke(javafx.scene.paint.Color.RED);
@@ -847,7 +848,7 @@ public class Controller implements Initializable {
      * @return Frame number depending on the slider position
      */
     private int setLabelForSliderValue() {
-        int frameNumber = getFrameNumber((long) Math.ceil(frameSlider.getValue()));
+        int frameNumber = getFrameNumber((long) Math.floor(frameSlider.getValue()));
         frameNumberField.setText(String.valueOf(frameNumber));
 
         return frameNumber;
@@ -875,7 +876,7 @@ public class Controller implements Initializable {
             int broj;
 
             try {
-                broj = getFrameNumber((long) Math.ceil(Integer.valueOf(frameNumberTextField.getText()) / 15));
+                broj = getFrameNumber((long) Math.floor(Integer.valueOf(frameNumberTextField.getText()) / 15.));
             } catch (NumberFormatException ex) {
                 Message.warning("Upozorenje!", "Niste unijeli cijeli broj.");
 
@@ -900,7 +901,7 @@ public class Controller implements Initializable {
                 beginningX = mouseEvent.getX();
                 beginningY = mouseEvent.getY();
 
-                selectedId = null;
+                selectedRectangle = null;
 
                 System.out.println(evaluationMainApp.getMarkedFrames());
 
@@ -911,7 +912,7 @@ public class Controller implements Initializable {
                         drawingInitialized = false;
                         rectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
 
-                        selectedId = rectangle;
+                        selectedRectangle = rectangle;
                         footballFieldImage.requestFocus();
                     } else {
                         rectangle.setStroke(javafx.scene.paint.Color.RED);
@@ -923,14 +924,14 @@ public class Controller implements Initializable {
         footballFieldImage.setFocusTraversable(true);
 
         footballFieldImage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.DELETE && selectedId != null) {
+            if (e.getCode() == KeyCode.DELETE && selectedRectangle != null) {
                 int frame = getFrameNumber((long) frameSlider.getValue());
 
-                drawnRectangles.remove(selectedId);
-                imagePane.getChildren().remove(selectedId);
+                drawnRectangles.remove(selectedRectangle);
+                imagePane.getChildren().remove(selectedRectangle);
 
                 List<Rectangle> lista = evaluationMainApp.getMarkedFrame(frame);
-                lista.remove(selectedId);
+                lista.remove(selectedRectangle);
 
                 evaluationMainApp.updateMarkedFrame(frame, lista);
                 System.out.println(evaluationMainApp.getMarkedFrame(frame));
