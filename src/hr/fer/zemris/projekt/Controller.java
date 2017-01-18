@@ -21,6 +21,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -31,6 +32,7 @@ import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -925,16 +927,54 @@ public class Controller implements Initializable {
 
         footballFieldImage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.DELETE && selectedRectangle != null) {
-                int frame = getFrameNumber((long) frameSlider.getValue());
+                int frame = getFrameNumber((long) Math.floor(frameSlider.getValue()));
 
                 drawnRectangles.remove(selectedRectangle);
                 imagePane.getChildren().remove(selectedRectangle);
 
-                List<Rectangle> lista = evaluationMainApp.getMarkedFrame(frame);
-                lista.remove(selectedRectangle);
+                List<Rectangle> remainingRectangles = evaluationMainApp.getMarkedFrame(frame);
+                remainingRectangles.remove(selectedRectangle);
 
-                evaluationMainApp.updateMarkedFrame(frame, lista);
-                System.out.println(evaluationMainApp.getMarkedFrame(frame));
+                evaluationMainApp.updateMarkedFrame(frame, remainingRectangles);
+            } else if (e.getCode() == KeyCode.P && selectedRectangle != null) {
+                int i = 0;
+
+                for (Rectangle rectangle : drawnRectangles) {
+                    if (rectangle.equals(selectedRectangle)) {
+                        break;
+                    }
+
+                    i++;
+                }
+
+                drawnRectangles.get(i).setStroke(javafx.scene.paint.Color.RED);
+
+                if (i == 0) {
+                    i = drawnRectangles.size();
+                }
+
+                drawnRectangles.get(i - 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+                selectedRectangle = drawnRectangles.get(i - 1);
+            } else if (e.getCode() == KeyCode.N && selectedRectangle != null) {
+                int i = 0;
+
+                for (Rectangle rectangle : drawnRectangles) {
+                    if (rectangle.equals(selectedRectangle)) {
+                        break;
+                    }
+
+                    i++;
+                }
+                System.out.println(i);
+
+                drawnRectangles.get(i).setStroke(javafx.scene.paint.Color.RED);
+
+                if (i == drawnRectangles.size() - 1) {
+                    i = -1;
+                }
+
+                drawnRectangles.get(i + 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+                selectedRectangle = drawnRectangles.get(i + 1);
             }
         });
 
@@ -956,8 +996,7 @@ public class Controller implements Initializable {
         // Draw the rectangle once user finishes dragging.
         footballFieldImage.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
             if (drawingInitialized) {
-                //TODO edit boudns, now only works for the left one and not for the on on the bottom need a better solution
-                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight()) {
+                if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage.getFitHeight() && mouseEvent.getX() > 0 && mouseEvent.getY() > 0) {
                     javafx.scene.shape.Rectangle rectangle = drawRectangle(mouseEvent.getX(), mouseEvent.getY());
 
                     imagePane.getChildren().add(rectangle);
