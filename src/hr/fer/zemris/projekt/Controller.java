@@ -33,6 +33,7 @@ import org.jcodec.api.JCodecException;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.Color;
+import java.awt.MenuItem;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -68,6 +69,7 @@ public class Controller implements Initializable {
      */
     @FXML
     private Slider frameSlider;
+
 
     /**
      * Shows image of the football field (of the current frame).
@@ -350,7 +352,7 @@ public class Controller implements Initializable {
 
         recallValue.setText(String.valueOf(recall) + "%");
         precisionValue.setText(String.valueOf(precision) + "%");
-        f1Value.setText(String.valueOf(f1) + "%");
+        f1Value.setText(String.valueOf(f1*100) + "%");
     }
 
     @FXML
@@ -891,8 +893,7 @@ public class Controller implements Initializable {
             frameNumberTextField.clear();
         }
     }
-
-    @Override
+        @Override
     public void initialize(URL location, ResourceBundle resources) {
         footballFieldImage.requestFocus();
 

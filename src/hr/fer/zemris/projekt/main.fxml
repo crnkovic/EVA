@@ -52,8 +52,8 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="Postavke">
-                <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
-                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile"
+                <MenuItem fx:id="vid" mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"></MenuItem>
+                <MenuItem fx:id="file" mnemonicParsing="false" onAction="#setEvaluationFile"
                           text="Odaberite datoteku s trajektorijama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
