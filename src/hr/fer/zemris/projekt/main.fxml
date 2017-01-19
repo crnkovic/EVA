@@ -22,7 +22,7 @@
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage" fitHeight="470.0" fitWidth="820.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fx:id="footballFieldImage" fitHeight="470.0" fitWidth="820" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
 
             </ImageView>
         </Pane>
@@ -50,9 +50,9 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="Postavke">
-                <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
-                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s trajektorijama"/>
-                <MenuItem mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabiljezenim oznakama"/>
+                <MenuItem fx:id="video" mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
+                <MenuItem fx:id="file" mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s trajektorijama"/>
+                <MenuItem fx:id="gFile" mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabiljezenim oznakama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>
@@ -64,8 +64,8 @@
             <AnchorPane prefHeight="28.0" prefWidth="200.0"
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0;-fx-padding: 0 0 5 0">
                 <Label prefHeight="40.0" prefWidth="126.0" text="Jaccardov indeks: " AnchorPane.leftAnchor="0.0"/>
-                <TextField fx:id="jaccardIndex" layoutX="150.0" layoutY="8.0" prefHeight="25.0" prefWidth="74.0"
-                           AnchorPane.rightAnchor="0.0" />
+                <TextField fx:id="jaccardIndex" layoutX="150.0" layoutY="8.0" prefHeight="25.0" prefWidth="65.0"
+                           AnchorPane.rightAnchor="0.0" text="0.5" />
             </AnchorPane>
 
             <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0"
@@ -110,16 +110,6 @@
 
             <AnchorPane prefHeight="18.0" prefWidth="200.0"
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 0 0 1 0; -fx-padding: 10 0 0 0">
-                <!-->Dodat akcija na novi scene ? Za grafove i slicno to poslije treba napravit<!-->
-                <Button fx:id="moreInfoButton" layoutX="150.0" layoutY="-6.0" prefHeight="26.0" prefWidth="202.0"
-                        text="Više informacija" AnchorPane.rightAnchor="0.0">
-                    <VBox.margin>
-                        <Insets>
-                            <top>10</top>
-                            <bottom>10</bottom>
-                        </Insets>
-                    </VBox.margin>
-                </Button>
             </AnchorPane>
 
             <!--> Dodaj gumb obrisi sve i gumb da se oznaci iz datoteke<!-->

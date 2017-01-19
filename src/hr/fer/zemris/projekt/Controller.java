@@ -11,13 +11,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.*;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
@@ -40,6 +39,8 @@ import java.util.List;
 
 
 public class Controller implements Initializable {
+	private static final float DISPLAY_WIDTH = (float) 820.0;
+	private static final float DISPLAY_HEIGHT = (float) 470.0;
 	/**
 	 * Current window scene.
 	 */
@@ -197,6 +198,9 @@ public class Controller implements Initializable {
 		fileChooser.setTitle("Odaberite video za evaluaciju");
 		File file = fileChooser.showOpenDialog(scene.getWindow());
 
+		if (file == null) {
+			return;
+		}
 		// Set path to the video in the main application and collect number of frames from the video
 		evaluationMainApp.setVideoPath(file.getPath());
 		int numberOfFrames = VideoUtil.getNumberOfFrames(file.getPath());
@@ -353,7 +357,12 @@ public class Controller implements Initializable {
 
 		recallValue.setText(String.valueOf(recall) + "%");
 		precisionValue.setText(String.valueOf(precision) + "%");
-		f1Value.setText(String.valueOf(f1) + "%");
+		if(!Float.isNaN(f1)){
+			f1Value.setText(String.valueOf(100*f1) + "%");
+		}else{
+			f1Value.setText(String.valueOf(f1));
+		}
+
 	}
 
 	@FXML
@@ -614,7 +623,7 @@ public class Controller implements Initializable {
 		for (int frameNumber : frameNumbersList) {
 			// Loop through the rectangles for this specific frame and write it to the file
 			for (EditRectangle label : evaluationMainApp.getMarkedFrame(frameNumber)) {
-				System.out.println("frame number:"+frameNumber+" label:"+label);
+				System.out.println("frame number:" + frameNumber + " label:" + label);
 				writer.write(frameNumber + "," + label.toString() + System.lineSeparator());
 				writer.flush();
 			}
@@ -644,6 +653,9 @@ public class Controller implements Initializable {
 	 */
 	@FXML
 	public void saveMarks(ActionEvent actionEvent) {
+		if(!evaluationMainApp.isVideoDirSet()){
+			Message.warning("Upozorenje!","Video nije učitan.");
+		}
 		// Get map of all marked frames from the application
 		Map<Integer, Set<EditRectangle>> markedFrames = evaluationMainApp.getMarkedFrames();
 
@@ -855,32 +867,55 @@ public class Controller implements Initializable {
 	 */
 	private int getFrameNumber(long sliderValue) {
 		// Return frame 1+0
-		return (int) (sliderValue+1);
+		return (int) (sliderValue + 1);
 	}
 
 	@FXML
-	public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException {
+	public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException, FrameGrabber.Exception {
 		if (e.getCode() == KeyCode.ENTER) {
+			if(!evaluationMainApp.isVideoDirSet()){
+				Message.warning("Upozorenje!","Niste učitali video.");
+				frameNumberTextField.clear();
+				return;
+			}
 			int broj;
 
 			try {
-				broj = getFrameNumber((long) Math.floor(Integer.valueOf(frameNumberTextField.getText())));
+				broj = (Integer.valueOf(frameNumberTextField.getText()));
 			} catch (NumberFormatException ex) {
 				Message.warning("Upozorenje!", "Niste unijeli cijeli broj.");
-
 				return;
+			}
+			int totalNumberOfFrames =VideoUtil.getNumberOfFrames(evaluationMainApp.getVideoPath());
+			if(broj > totalNumberOfFrames){
+				broj = totalNumberOfFrames;
 			}
 
 			setSelectedFrame(broj);
-			frameSlider.setValue(broj);
+			frameSlider.setValue(broj-1);
 			frameNumberField.setText(String.valueOf(broj));
 			frameNumberTextField.clear();
 		}
 	}
 
+	@FXML
+	private MenuItem video;
+
+	@FXML
+	private MenuItem file;
+
+	@FXML
+	private MenuItem gFile;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		footballFieldImage.requestFocus();
+
+
+		video.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
+		file.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN));
+		gFile.setAccelerator(new KeyCodeCombination(KeyCode.G, KeyCombination.CONTROL_DOWN));
+
 
 		// User is starting to draw a rectangle!
 		footballFieldImage.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
@@ -909,18 +944,24 @@ public class Controller implements Initializable {
 
 		footballFieldImage.setFocusTraversable(true);
 
+
 		footballFieldImage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
-			if (e.getCode() == KeyCode.DELETE && selectedRectangle != null) {
+			if(selectedRectangle == null){
+				return;
+			}
+			if (e.getCode() == KeyCode.DELETE) {
 				int frame = getFrameNumber((long) Math.floor(frameSlider.getValue()));
 
 				drawnRectangles.remove(selectedRectangle);
 				imagePane.getChildren().remove(selectedRectangle);
 
 				Set<EditRectangle> remainingRectangles = evaluationMainApp.getMarkedFrame(frame);
-				remainingRectangles.remove(selectedRectangle);
+				if (remainingRectangles != null) {
+					remainingRectangles.remove(selectedRectangle);
+				}
 
 				evaluationMainApp.updateMarkedFrame(frame, remainingRectangles);
-			} else if (e.getCode() == KeyCode.P && selectedRectangle != null) {
+			} else if (e.getCode() == KeyCode.P) {
 				int i = 0;
 
 				for (EditRectangle rectangle : drawnRectangles) {
@@ -939,7 +980,7 @@ public class Controller implements Initializable {
 
 				drawnRectangles.get(i - 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
 				selectedRectangle = drawnRectangles.get(i - 1);
-			} else if (e.getCode() == KeyCode.N && selectedRectangle != null) {
+			} else if (e.getCode() == KeyCode.N) {
 				int i = 0;
 
 				for (EditRectangle rectangle : drawnRectangles) {
@@ -958,6 +999,74 @@ public class Controller implements Initializable {
 
 				drawnRectangles.get(i + 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
 				selectedRectangle = drawnRectangles.get(i + 1);
+			}else if(e.isShiftDown()){
+
+				if(e.getCode().equals(KeyCode.I)){
+					if(selectedRectangle.getHeight() == 1){
+						return;
+					}
+					selectedRectangle.setHeight(selectedRectangle.getHeight()-1);
+					selectedRectangle.setY(selectedRectangle.getY()+1);
+
+				}else if(e.getCode().equals(KeyCode.K)){
+					if(selectedRectangle.getHeight() == 1){
+						return;
+					}
+					selectedRectangle.setHeight(selectedRectangle.getHeight()-1);
+
+				}else if(e.getCode().equals(KeyCode.J)){
+					if(selectedRectangle.getWidth() == 1){
+						return;
+					}
+					selectedRectangle.setWidth(selectedRectangle.getWidth()-1);
+					selectedRectangle.setX(selectedRectangle.getX()+1);
+
+				}else if(e.getCode().equals(KeyCode.L)){
+					if(selectedRectangle.getWidth() == 1){
+						return;
+					}
+					selectedRectangle.setWidth(selectedRectangle.getWidth()-1);
+
+				}
+
+			}else if(e.getCode().equals(KeyCode.W)){
+				if(selectedRectangle.getY() == 0){
+					return;
+				}
+				selectedRectangle.setY(selectedRectangle.getY()-1);
+
+			} else if(e.getCode().equals(KeyCode.S)){
+				if(selectedRectangle.getY()==DISPLAY_HEIGHT){
+					return;
+				}
+				selectedRectangle.setY(selectedRectangle.getY()+1);
+
+			}else if(e.getCode().equals(KeyCode.A)){
+
+				selectedRectangle.setX(selectedRectangle.getX()-1);
+
+			}else if(e.getCode().equals(KeyCode.D)){
+
+				selectedRectangle.setX(selectedRectangle.getX()+1);
+
+			}else if(e.getCode().equals(KeyCode.I)){
+
+				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
+				selectedRectangle.setY(selectedRectangle.getY()-1);
+
+			}else if(e.getCode().equals(KeyCode.K)){
+
+				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
+
+			}else if(e.getCode().equals(KeyCode.J)){
+
+				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
+				selectedRectangle.setX(selectedRectangle.getX()-1);
+
+			}else if(e.getCode().equals(KeyCode.L)){
+
+				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
+
 			}
 		});
 
@@ -1017,8 +1126,9 @@ public class Controller implements Initializable {
 		KeyEvent keyEvent = (KeyEvent) event;
 		if (keyEvent.getCode().equals(KeyCode.DELETE)) {
 			String framenumber = markedFramesList.getSelectionModel().getSelectedItems().get(0);
-			if(markedFramesList.getItems().contains(framenumber)){
-			markedFramesList.getItems().remove(framenumber);}
+			if (markedFramesList.getItems().contains(framenumber)) {
+				markedFramesList.getItems().remove(framenumber);
+			}
 			if (Integer.parseInt(framenumber) == getFrameNumber(setLabelForSliderValue())) {
 				setSelectedFrame(Integer.parseInt(framenumber));
 			}
@@ -1049,11 +1159,11 @@ public class Controller implements Initializable {
 				rectangles = new HashSet<>();
 			}
 			rectangles.add(rect);
-			evaluationMainApp.updateMarkedFrame(frame,rectangles);
+			evaluationMainApp.updateMarkedFrame(frame, rectangles);
 			line = reader.readLine();
 		}
 		markedFramesList.getItems().clear();
-		for(Map.Entry<Integer, Set<EditRectangle>> entry : evaluationMainApp.getMarkedFrames().entrySet()){
+		for (Map.Entry<Integer, Set<EditRectangle>> entry : evaluationMainApp.getMarkedFrames().entrySet()) {
 			markedFramesList.getItems().add(String.valueOf(entry.getKey()));
 		}
 		setSelectedFrame(getFrameNumber(setLabelForSliderValue()));
