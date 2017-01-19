@@ -42,6 +42,11 @@ public class EvaluationMain extends Application {
     private Map<Integer, Set<EditRectangle>> markedFrames;
 
     /**
+     * Visina bas njihovog videa prije ucitavanja
+     */
+    private double videoHeight;
+
+    /**
      * Launch the application by running the launch() method from the parent <b>Application</b> class.
      * Accepts command line arguments which then passes on to the launch() method.
      *
@@ -70,6 +75,9 @@ public class EvaluationMain extends Application {
 
         // Get first frame then calculate the width of the rectangle
         BufferedImage bufferedImage = VideoUtil.getFrame(videoPath, 0);
+
+        videoHeight= bufferedImage.getHeight();
+        System.out.println("videoHeight:"+videoHeight);
 
         widthMultiplier = 820. / bufferedImage.getWidth();
 
@@ -239,4 +247,8 @@ public class EvaluationMain extends Application {
 	public void clearMarkedFrames() {
 	 this.markedFrames.clear();
 	}
+
+    public double getVideoHeight() {
+        return videoHeight;
+    }
 }

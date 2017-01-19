@@ -162,6 +162,8 @@ public class Controller implements Initializable {
 	 * List containing indices of removed frames.
 	 */
 	static List<Integer> removedFrames = new ArrayList<>();
+	public Controller() throws IOException, JCodecException {
+	}
 
 	/**
 	 * Called when the frame slider's position is changed.
@@ -785,7 +787,6 @@ public class Controller implements Initializable {
 	private double computeJaccardIndex(javafx.scene.shape.Rectangle markedRectangle, javafx.scene.shape.Rectangle
 			generatorRect) {
 
-		//System.out.println("multipier"+evaluationMainApp.getWidthMultiplier());
 		return ComputationUtils.computeJaccardIndex(
 				// Marked rectangle properties
 				markedRectangle.getX(),
@@ -832,8 +833,7 @@ public class Controller implements Initializable {
 								rectangles.add(new EditRectangle(
 										Double.parseDouble(property[5]) * evaluationMainApp.getWidthMultiplier(),
 										Double.parseDouble(property[6]) * evaluationMainApp.getWidthMultiplier() -
-												Double.parseDouble(property[8]) * evaluationMainApp
-														.getWidthMultiplier(),
+												Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier(),
 										Double.parseDouble(property[7]) * evaluationMainApp.getWidthMultiplier(),
 										Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier())
 								);
@@ -952,14 +952,35 @@ public class Controller implements Initializable {
 			if (e.getCode() == KeyCode.DELETE) {
 				int frame = getFrameNumber((long) Math.floor(frameSlider.getValue()));
 
+				int indexRectaZaObrisati = 0;
+				for (EditRectangle rectangle : drawnRectangles) {
+					if (rectangle.equals(selectedRectangle)) {
+						break;
+					}
+
+					indexRectaZaObrisati++;
+				}
+
+
+
 				drawnRectangles.remove(selectedRectangle);
 				imagePane.getChildren().remove(selectedRectangle);
 
 				Set<EditRectangle> remainingRectangles = evaluationMainApp.getMarkedFrame(frame);
 				if (remainingRectangles != null) {
-					remainingRectangles.remove(selectedRectangle);
-				}
 
+					System.out.println("index:"+indexRectaZaObrisati);
+					remainingRectangles.remove(selectedRectangle);
+
+				}
+				if(indexRectaZaObrisati>=1){
+					//nadji sljedeceg i postavi ga kao odabranog ako nismo obrisali zadnjeg
+					if(indexRectaZaObrisati==drawnRectangles.size()){
+						indexRectaZaObrisati--;
+					}
+					drawnRectangles.get(indexRectaZaObrisati).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+					selectedRectangle = drawnRectangles.get(indexRectaZaObrisati);
+				}
 				evaluationMainApp.updateMarkedFrame(frame, remainingRectangles);
 			} else if (e.getCode() == KeyCode.P) {
 				int i = 0;
@@ -1030,41 +1051,61 @@ public class Controller implements Initializable {
 				}
 
 			}else if(e.getCode().equals(KeyCode.W)){
-				if(selectedRectangle.getY() == 0){
+				if(selectedRectangle.getY() == 1){
 					return;
 				}
 				selectedRectangle.setY(selectedRectangle.getY()-1);
 
-			} else if(e.getCode().equals(KeyCode.S)){
-				if(selectedRectangle.getY()==DISPLAY_HEIGHT){
-					return;
-				}
+			}else if(e.getCode().equals(KeyCode.S)){
+					if(selectedRectangle.getY()+selectedRectangle.getHeight()
+                            >=
+                            evaluationMainApp.getVideoHeight()*evaluationMainApp.getWidthMultiplier()-2
+					) {
+
+						return;
+					}
 				selectedRectangle.setY(selectedRectangle.getY()+1);
 
 			}else if(e.getCode().equals(KeyCode.A)){
-
+				if(selectedRectangle.getX()==1){
+					return;
+				}
 				selectedRectangle.setX(selectedRectangle.getX()-1);
 
 			}else if(e.getCode().equals(KeyCode.D)){
-
+				if(selectedRectangle.getX()+selectedRectangle.getWidth() >= DISPLAY_WIDTH-1){
+					return;
+				}
 				selectedRectangle.setX(selectedRectangle.getX()+1);
 
 			}else if(e.getCode().equals(KeyCode.I)){
-
+				if(selectedRectangle.getY() == 1){
+					return;
+				}
 				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
 				selectedRectangle.setY(selectedRectangle.getY()-1);
 
 			}else if(e.getCode().equals(KeyCode.K)){
+				if(selectedRectangle.getY()+selectedRectangle.getHeight()
+						>=
+						evaluationMainApp.getVideoHeight()*evaluationMainApp.getWidthMultiplier()-2
+						) {
 
+					return;
+				}
 				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
 
 			}else if(e.getCode().equals(KeyCode.J)){
-
+				if(selectedRectangle.getX() == 1 ){
+					return;
+				}
 				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
 				selectedRectangle.setX(selectedRectangle.getX()-1);
 
 			}else if(e.getCode().equals(KeyCode.L)){
-
+				if(selectedRectangle.getX()+selectedRectangle.getWidth() >= DISPLAY_WIDTH-1){
+					return;
+				}
 				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
 
 			}
