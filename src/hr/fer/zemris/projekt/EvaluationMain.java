@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.jcodec.api.JCodecException;
 
@@ -12,8 +11,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class EvaluationMain extends Application {
     /**
@@ -40,7 +39,7 @@ public class EvaluationMain extends Application {
      * Map of marked frames.
      * Each key-value pair consists of the index of the frame as well as list of <b>Rectangle</b> objects.
      */
-    private Map<Integer, List<javafx.scene.shape.Rectangle>> markedFrames;
+    private Map<Integer, Set<EditRectangle>> markedFrames;
 
     /**
      * Launch the application by running the launch() method from the parent <b>Application</b> class.
@@ -178,7 +177,7 @@ public class EvaluationMain extends Application {
      *
      * @return Marked frames
      */
-    public Map<Integer, List<javafx.scene.shape.Rectangle>> getMarkedFrames() {
+    public Map<Integer, Set<EditRectangle>> getMarkedFrames() {
         if (!Controller.removedFrames.isEmpty()) {
             for (int i : Controller.removedFrames) {
                 markedFrames.remove(i);
@@ -192,7 +191,7 @@ public class EvaluationMain extends Application {
         markedFrames.remove(id);
     }
 
-    public void updateMarkedFrame(int id, List<Rectangle> list) {
+    public void updateMarkedFrame(int id, Set<EditRectangle> list) {
         markedFrames.put(id, list);
     }
 
@@ -202,7 +201,7 @@ public class EvaluationMain extends Application {
      * @param frameNumber Marked frame index
      * @return Marked frame
      */
-    public List<javafx.scene.shape.Rectangle> getMarkedFrame(int frameNumber) {
+    public Set<EditRectangle> getMarkedFrame(int frameNumber) {
         return markedFrames.get(frameNumber);
     }
 
@@ -236,4 +235,8 @@ public class EvaluationMain extends Application {
 
         primaryStage.show();
     }
+
+	public void clearMarkedFrames() {
+	 this.markedFrames.clear();
+	}
 }

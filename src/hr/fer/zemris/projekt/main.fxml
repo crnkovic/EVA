@@ -45,16 +45,14 @@
             <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0"
                     text="Spremi oznake"/>
             <Separator layoutX="882.0" layoutY="10.0" orientation="VERTICAL" prefHeight="33.0" prefWidth="12.0" style="visibility: hidden" />
-            <Button fx:id="deleteMarksButton" mnemonicParsing="false" onAction="#deleteMarks" text="Izbriši oznake" />
-            <Separator layoutX="1012.0" layoutY="10.0" orientation="VERTICAL" prefHeight="33.0" prefWidth="0.0" style="visibility: hidden" />
-        </HBox>
+            </HBox>
     </bottom>
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
-                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile"
-                          text="Odaberite datoteku s trajektorijama"/>
+                <MenuItem mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s trajektorijama"/>
+                <MenuItem mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabiljezenim oznakama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>
@@ -80,7 +78,7 @@
                 </VBox.margin>
             </Button>
 
-            <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#njihovo" prefHeight="26.0"
+            <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#loadRectanglesFromFile" prefHeight="26.0"
                     prefWidth="200.0" text="Prikaži detektirane oznake" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
@@ -125,7 +123,7 @@
             </AnchorPane>
 
             <!--> Dodaj gumb obrisi sve i gumb da se oznaci iz datoteke<!-->
-            <ListView fx:id="markedFramesList" prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 10 0 0 0"
+            <ListView fx:id="markedFramesList" onKeyPressed="#edit" prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 10 0 0 0"
                       VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
