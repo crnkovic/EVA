@@ -257,6 +257,22 @@ public class Controller implements Initializable {
 	}
 
 
+
+	/**
+	 * returns the index the first element in set that equals value, return -1 if no element equals value
+	 * @param set
+	 * @param value
+	 * @return
+	 */
+	public static int getIndex(Set<? extends Object> set, Object value) {
+		int result = 0;
+		for (Object entry:set) {
+			if (entry.equals(value)) return result;
+			result++;
+		}
+		return -1;
+	}
+
 	/**
 	 * Called when the user presses the evaluate button. Does the magic.
 	 * Runs through each ground truth marked frame, and calculates the properties using the Jaccard index.
@@ -304,39 +320,62 @@ public class Controller implements Initializable {
 		for (int frameNumber : evaluationMainApp.getMarkedFrames().keySet()) {
 			// Get ground truth rectangles and user-defined rectangles for this specific frame
 			Set<EditRectangle> groundTruthRectangles = evaluationMainApp.getMarkedFrame(frameNumber);
-			Set<EditRectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
+			Set<EditRectangle> generatorRectangles = rectanglesForAFrame(frameNumber);
 
 			// Set false negatives count to all detected rectangles size, so we can decrement it once we hit a
 			// rectangle
 			falseNegatives += groundTruthRectangles.size();
-
-			for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
+			List<Integer> takenRectangles = new LinkedList<>();
+			for (javafx.scene.shape.Rectangle generatorRectangle : generatorRectangles) {
 				boolean hit = false;
-
-				System.out.println("asasddsa");
-				for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
-					if (computeJaccardIndex(groundTruthRectangle, generatorRectangle) > Float.parseFloat(jaccardIndex
-							.getText())) {
-						// We have hit it, well done, increment the true positive and decrement the false negative!
+				Map<Integer,Double> groundTruthIndexJaccardMap = new HashMap<>();
+				for (EditRectangle groundTruthRectangle : groundTruthRectangles) {
+					if(takenRectangles.contains(getIndex(groundTruthRectangles,groundTruthRectangle))){
+						continue;
+					}
+					double jaccIndex = computeJaccardIndex(groundTruthRectangle, generatorRectangle);
+					if (jaccIndex > Float.parseFloat(jaccardIndex.getText())) {
+						//We have found a rectangle that fits, remember that one and look for a one that fits better
+						int GTRectIndex = getIndex(groundTruthRectangles,groundTruthRectangle);
+						groundTruthIndexJaccardMap.put(GTRectIndex,jaccIndex);
 						hit = true;
-						truePositives++;
-						falseNegatives--;
-
-						break;
 					}
 				}
 
-				// We haven't hit it? False positive it seems.
 				if (!hit) {
+					// We haven't hit it? False positive it seems.
 					falsePositives++;
+				}else{
+					// We hit it, well done, increment true positive and decrement false negative!
+					// Find out which one fits the most and add it to the takenRectangles list
+					int bestIndex = 0;
+					double maxValue = 0;
+					boolean firstElement = true;
+					for (int index:groundTruthIndexJaccardMap.keySet()) {
+						if(firstElement){
+							bestIndex=index;
+							maxValue=groundTruthIndexJaccardMap.get(index);
+							firstElement=false;
+						}
+						double jaccIndex = groundTruthIndexJaccardMap.get(index);
+						if(jaccIndex > maxValue){
+							bestIndex=index;
+							maxValue=jaccIndex;
+						}
+					}
+					takenRectangles.add(bestIndex);
+
+					truePositives++;
+					falseNegatives--;
+
+//					break;
 				}
 			}
 		}
 
-		System.out.println(truePositives);
-		System.out.println(falsePositives);
-		System.out.println(falseNegatives);
-
+		System.out.println("TP:"+truePositives);
+		System.out.println("FP:"+falsePositives);
+		System.out.println("FN:"+falseNegatives);
 		// Compute all necessary properties
 		float recall = ComputationUtils.computeRecall(truePositives, falseNegatives);
 		float precision = ComputationUtils.computePrecision(truePositives, falsePositives);
@@ -662,18 +701,40 @@ public class Controller implements Initializable {
 
 				selectedRectangle = null;
 				drawingInitialized = true;
-
+				boolean selected=false;
+				int indexOfTheSmallest=0;
+				double smallestArea = 0;
+				boolean first = true;
 				for (EditRectangle rectangle : drawnRectangles) {
-					if (rectangle.getX() < beginningX && rectangle.getY() < beginningY && rectangle.getX() + rectangle
-							.getWidth() > beginningX && rectangle.getY() + rectangle.getHeight() > beginningY) {
-						drawingInitialized = false;
-						rectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+					if (
+							rectangle.getX() < beginningX
+							&& rectangle.getY() < beginningY
+							&& rectangle.getX() + rectangle.getWidth() > beginningX
+							&& rectangle.getY() + rectangle.getHeight() > beginningY
+					) {
+						double area = rectangle.getWidth() * rectangle.getHeight();
+						int index = drawnRectangles.indexOf(rectangle);
+						selected = true;
+						if (first) {
+							smallestArea = area;
+							indexOfTheSmallest = index;
+							first = false;
 
-						selectedRectangle = rectangle;
-						footballFieldImage.requestFocus();
-					} else {
-						rectangle.setStroke(javafx.scene.paint.Color.RED);
+						} else if (area < smallestArea) {
+							smallestArea = area;
+							indexOfTheSmallest = index;
+
+						}
 					}
+					rectangle.setStroke(javafx.scene.paint.Color.RED);
+				}
+				if(selected){
+					EditRectangle rectangle = drawnRectangles.get(indexOfTheSmallest);
+					drawingInitialized = false;
+					rectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
+
+					selectedRectangle = rectangle;
+					footballFieldImage.requestFocus();
 				}
 			}
 		});
