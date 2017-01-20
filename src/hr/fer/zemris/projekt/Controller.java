@@ -605,17 +605,6 @@ public class Controller implements Initializable {
 		return frameNumber;
 	}
 
-	/**
-	 * Get "real" calculated frame number based on the slider value.
-	 * Multiplies slider value by the FRAME_HOP constant.
-	 *
-//	 * @param sliderValue Slider value
-	 * @return Calculate frame number
-	 */
-//	private int getFrameNumber(long sliderValue) {
-//		// Return frame 1+0
-//		return (int) (sliderValue + 1);
-//	}
 
 	@FXML
 	public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException, FrameGrabber.Exception {
