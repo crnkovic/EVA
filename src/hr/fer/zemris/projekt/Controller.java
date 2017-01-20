@@ -1,6 +1,5 @@
 package hr.fer.zemris.projekt;
 
-import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -47,7 +46,7 @@ public class Controller implements Initializable {
 	private Label frameNumberField;
 
 	@FXML
-	private static int BLOCK_INCREMENT = 500;
+	private static final int BLOCK_INCREMENT = 500;
 
 	/**
 	 * Frame slider.
@@ -427,8 +426,8 @@ public class Controller implements Initializable {
 		Map<Integer, Set<EditRectangle>> markedFrames = evaluationMainApp.getMarkedFrames();
 
 		// Calculate frame number
-	//	int frameNumber = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long)Math.floor(frameSlider.getValue()));
-		int frameNumber = Integer.parseInt(frameNumberField.getText());
+		int frameNumber = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long)Math.floor(frameSlider.getValue()));
+		frameNumber = Integer.parseInt(frameNumberField.getText());
 		// Get all drawn rectangles in this frame and save them to the markedFrames map
 		Set<EditRectangle> rectangles = new HashSet<>();
 		rectangles.addAll(drawnRectangles);
@@ -440,23 +439,6 @@ public class Controller implements Initializable {
 		}
 	}
 
-	@FXML
-	public void deleteMarks(ActionEvent actionEvent) throws NumberFormatException, IOException {
-		ObservableList<String> selectedIndices = markedFramesList.getSelectionModel().getSelectedItems();
-
-		selectedIndices.forEach(item -> {
-			int frame = Integer.parseInt(item);
-
-			evaluationMainApp.removeMarkedFrame(frame);
-			markedFramesList.getItems().remove(String.valueOf(frame));
-
-			try {
-				setSelectedFrame(frame);
-			} catch (IOException | JCodecException e) {
-				e.printStackTrace();
-			}
-		});
-	}
 
 
 	/**
