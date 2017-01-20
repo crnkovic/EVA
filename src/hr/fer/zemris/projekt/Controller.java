@@ -6,36 +6,25 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.*;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
 
 
 public class Controller implements Initializable {
@@ -209,7 +198,7 @@ public class Controller implements Initializable {
 
 		// Set up slider
 		frameSlider.setMax(numberOfFrames);
-		frameSlider.setMin(0);
+		frameSlider.setMin(1);
 		frameSlider.setBlockIncrement(BLOCK_INCREMENT);
 
 		// Reset ground truth file
@@ -239,7 +228,7 @@ public class Controller implements Initializable {
 			return;
 		}
 
-		Set<EditRectangle> rectangles = rectanglesForAFrame(getFrameNumber((long) Math.floor(frameSlider.getValue())));
+		Set<EditRectangle> rectangles = rectanglesForAFrame((int) Math.floor(frameSlider.getValue()));
 
 		drawnRectangles.addAll(rectangles);
 
@@ -367,231 +356,7 @@ public class Controller implements Initializable {
 
 	}
 
-	@FXML
-	public void saveCurrentFrame(ActionEvent actionEvent) {
-		Label oznaka = new Label("Želite li spremiti označene okvire:");
-		ToggleGroup oznOkviri = new ToggleGroup();
-		RadioButton btnDa = new RadioButton("Da");
-		btnDa.setToggleGroup(oznOkviri);
-		RadioButton btnNe = new RadioButton("Ne");
-		btnNe.setToggleGroup(oznOkviri);
 
-		Label spremanje = new Label("Koliko okvira želite spremiti:");
-		ToggleGroup sviOkviri = new ToggleGroup();
-		RadioButton sve = new RadioButton("Sve");
-		RadioButton neke = new RadioButton("Neke");
-		sve.setToggleGroup(sviOkviri);
-		neke.setToggleGroup(sviOkviri);
-
-		TextField upisi = new TextField();
-		upisi.setPromptText("Ovdje unesite brojeve okvira koje želite spremiti");
-		upisi.setDisable(true);
-
-		neke.setOnAction(event -> upisi.setDisable(false));
-		sve.setOnAction(event -> upisi.setDisable(true));
-
-		Button spremi = new Button("Spremi");
-
-		spremi.setOnAction(event -> {
-			int numberOfFrames = 0;
-			try {
-				numberOfFrames = VideoUtil.getNumberOfFrames(evaluationMainApp.getVideoPath());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			if (btnNe.isSelected()) {
-				if (sve.isSelected()) {
-					DirectoryChooser directoryChooser = new DirectoryChooser();
-					directoryChooser.setTitle("Spremi neoznačene okvire");
-					File directory = directoryChooser.showDialog(scene.getWindow());
-
-					for (int i = 0; i < numberOfFrames; ++i) {
-						BufferedImage fieldImage = null;
-
-						try {
-							fieldImage = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), i);
-						} catch (IOException | JCodecException e) {
-							e.printStackTrace();
-						}
-
-						File frameFile = directory.toPath().resolve("okvir" + i + ".png").toFile();
-
-						try {
-							ImageIO.write(fieldImage, "png", frameFile);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-
-					if (neke.isSelected()) {
-						if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-							Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti " +
-									"oblika: 1, 5, 74, 89, ...");
-						} else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-							Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: 1," +
-									" " +
-									"5, 74, 89, ...");
-						} else {
-							String[] brojeviOkvira = upisi.getText().split(",");
-							int[] okviri = null;
-							int i = 0;
-							int disableOpen = 0;
-
-							for (String okvir : brojeviOkvira) {
-								okvir = okvir.trim();
-								okviri[i] = Integer.parseInt(brojeviOkvira[i]);
-
-								if (numberOfFrames < okviri[i] || okviri[i] < 0) {
-									Message.warning("Izvan raspona", "Broj ili neki od brojeva su veći od ukupnog " +
-											"broja okvira ili su manji od 0.");
-									disableOpen = 1;
-									break;
-								}
-								i++;
-							}
-							if (disableOpen == 0) {
-								DirectoryChooser directChooser = new DirectoryChooser();
-								directChooser.setTitle("Spremi neoznačene okvire");
-								File direct = directoryChooser.showDialog(scene.getWindow());
-								for (int mjesto : okviri) {
-									BufferedImage fieldImage = null;
-									try {
-										fieldImage = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), mjesto);
-									} catch (IOException | JCodecException e) {
-										e.printStackTrace();
-									}
-									File frameFile = direct.toPath().resolve("okvir" + i + ".png").toFile();
-									try {
-										ImageIO.write(fieldImage, "png", frameFile);
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-								}
-							}
-						}
-					}
-				} else {
-					DirectoryChooser directoryChooser = new DirectoryChooser();
-					directoryChooser.setTitle("Spremi označene okvire");
-					File file = directoryChooser.showDialog(scene.getWindow());
-					if (sve.isSelected()) {
-						for (int frameNumber : evaluationMainApp.getMarkedFrames().keySet()) {
-							BufferedImage image = null;
-							try {
-								image = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), frameNumber);
-							} catch (IOException | JCodecException e) {
-								e.printStackTrace();
-							}
-							Graphics graph = image.createGraphics();
-							file = file.toPath().resolve("O" + frameNumber + ".jpg").toFile();
-							for (javafx.scene.shape.Rectangle rec : evaluationMainApp.getMarkedFrame(frameNumber)) {
-								graph.setColor(Color.RED);
-//								graph.drawRect(rec.getxCoordinate(), rec.getyCoordinate(), rec.getHeight(), rec
-//										.getWidth());
-							}
-							try {
-								ImageIO.write(image, "png", file);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					} else {
-						if (upisi.getText() == null || upisi.getText().trim().isEmpty()) {
-							Message.warning("Neispravan unos", "Nije unesen niti jedan broj okvira. Unos treba biti" +
-									" " +
-									"oblika: 1, 5, 74, 89, ...");
-						} else if (upisi.getText().matches(".*[a-zA-Z]+.*")) {
-							Message.warning("Neispravan unos", "Unos slova nije dopušten. Unos treba biti oblika: " +
-									"1," +
-									" " +
-									"5, 74, 89, ...");
-						}
-						String[] okviri = upisi.getText().split(",");
-						int[] brojeviOkvira = null;
-						int i = 0;
-						int postoji = 0;
-						List<Integer> lista = new ArrayList<>();
-						for (String okvir : okviri) {
-							okvir = okvir.trim();
-							brojeviOkvira[i] = Integer.parseInt(okvir);
-							if (evaluationMainApp.getMarkedFrames().keySet().contains(brojeviOkvira[i])) {
-								lista.add(brojeviOkvira[i]);
-								postoji = 1;
-							}
-							i++;
-						}
-						if (postoji == 1) {
-							String s = null;
-							for (int j = 0; i < lista.size(); j++) {
-								s = s + lista.get(j) + "\t";
-							}
-							Message.warning("Krivi upis", "Okviri koji su navedeni, a još nisu označeni (ili su " +
-									"manji" +
-									" od 0) su: " + s);
-						}
-						for (int broj : brojeviOkvira) {
-							if (postoji == 1) {
-								break;
-							}
-							BufferedImage image = null;
-							try {
-								image = VideoUtil.getFrame(evaluationMainApp.getVideoPath(), broj);
-							} catch (IOException | JCodecException e) {
-								e.printStackTrace();
-							}
-							Graphics graph = image.createGraphics();
-							file = file.toPath().resolve("O" + broj + ".jpg").toFile();
-							for (javafx.scene.shape.Rectangle rec : evaluationMainApp.getMarkedFrame(broj)) {
-								graph.setColor(Color.RED);
-//								graph.drawRect(rec.getxCoordinate(), rec.getyCoordinate(), rec.getHeight(), rec
-//										.getWidth());
-							}
-							try {
-								ImageIO.write(image, "png", file);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-			}
-		});
-
-		BorderPane pane = new BorderPane();
-		pane.setPadding(new Insets(20, 20, 20, 20));
-
-		FlowPane pane2 = new FlowPane();
-		pane2.setVgap(100);
-		pane2.setHgap(30);
-		pane2.getChildren().addAll(oznaka, btnDa, btnNe);
-
-		pane.setTop(pane2);
-
-		BorderPane pane3 = new BorderPane();
-		pane3.setPadding(new Insets(50, 0, 50, 0));
-		pane.setCenter(pane3);
-
-		FlowPane pane4 = new FlowPane();
-		pane4.setVgap(100);
-		pane4.setHgap(50);
-		pane4.getChildren().addAll(spremanje, sve, neke);
-
-		pane3.setTop(pane4);
-		pane3.setBottom(upisi);
-
-		BorderPane pane5 = new BorderPane();
-		pane5.setRight(spremi);
-		pane.setBottom(pane5);
-
-		Scene secondScene = new Scene(pane, 700, 250);
-
-		Stage secondStage = new Stage();
-		secondStage.initModality(Modality.APPLICATION_MODAL);
-		secondStage.setTitle("Spremanje okvira");
-		secondStage.setScene(secondScene);
-
-		secondStage.show();
-	}
 
 	/**
 	 * Called when the "save file containing marks" button is pressed.
@@ -662,8 +427,8 @@ public class Controller implements Initializable {
 		Map<Integer, Set<EditRectangle>> markedFrames = evaluationMainApp.getMarkedFrames();
 
 		// Calculate frame number
-		int frameNumber = getFrameNumber(Math.round(frameSlider.getValue()));
-
+	//	int frameNumber = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long)Math.floor(frameSlider.getValue()));
+		int frameNumber = Integer.parseInt(frameNumberField.getText());
 		// Get all drawn rectangles in this frame and save them to the markedFrames map
 		Set<EditRectangle> rectangles = new HashSet<>();
 		rectangles.addAll(drawnRectangles);
@@ -852,7 +617,7 @@ public class Controller implements Initializable {
 	 * @return Frame number depending on the slider position
 	 */
 	private int setLabelForSliderValue() {
-		int frameNumber = getFrameNumber((long) Math.floor(frameSlider.getValue()));
+		int frameNumber =(int) Math.floor(frameSlider.getValue()); //getFrameNumber((long) Math.floor(frameSlider.getValue()));
 		frameNumberField.setText(String.valueOf(frameNumber));
 
 		return frameNumber;
@@ -862,13 +627,13 @@ public class Controller implements Initializable {
 	 * Get "real" calculated frame number based on the slider value.
 	 * Multiplies slider value by the FRAME_HOP constant.
 	 *
-	 * @param sliderValue Slider value
+//	 * @param sliderValue Slider value
 	 * @return Calculate frame number
 	 */
-	private int getFrameNumber(long sliderValue) {
-		// Return frame 1+0
-		return (int) (sliderValue + 1);
-	}
+//	private int getFrameNumber(long sliderValue) {
+//		// Return frame 1+0
+//		return (int) (sliderValue + 1);
+//	}
 
 	@FXML
 	public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException, FrameGrabber.Exception {
@@ -950,7 +715,7 @@ public class Controller implements Initializable {
 				return;
 			}
 			if (e.getCode() == KeyCode.DELETE) {
-				int frame = getFrameNumber((long) Math.floor(frameSlider.getValue()));
+				int frame = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long) Math.floor(frameSlider.getValue()));
 
 				int indexRectaZaObrisati = 0;
 				for (EditRectangle rectangle : drawnRectangles) {
@@ -1163,6 +928,7 @@ public class Controller implements Initializable {
 	}
 
 
+	@FXML
 	public void edit(Event event) throws IOException, JCodecException {
 		KeyEvent keyEvent = (KeyEvent) event;
 		if (keyEvent.getCode().equals(KeyCode.DELETE)) {
@@ -1170,7 +936,7 @@ public class Controller implements Initializable {
 			if (markedFramesList.getItems().contains(framenumber)) {
 				markedFramesList.getItems().remove(framenumber);
 			}
-			if (Integer.parseInt(framenumber) == getFrameNumber(setLabelForSliderValue())) {
+			if (Integer.parseInt(framenumber) == setLabelForSliderValue()){// getFrameNumber(setLabelForSliderValue())) {
 				setSelectedFrame(Integer.parseInt(framenumber));
 			}
 			HashSet<EditRectangle> emptrySet = new HashSet<>();
@@ -1207,7 +973,7 @@ public class Controller implements Initializable {
 		for (Map.Entry<Integer, Set<EditRectangle>> entry : evaluationMainApp.getMarkedFrames().entrySet()) {
 			markedFramesList.getItems().add(String.valueOf(entry.getKey()));
 		}
-		setSelectedFrame(getFrameNumber(setLabelForSliderValue()));
+		setSelectedFrame(setLabelForSliderValue());//getFrameNumber(setLabelForSliderValue()));
 
 	}
 }
