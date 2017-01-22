@@ -22,7 +22,7 @@
             fx:controller="hr.fer.zemris.projekt.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
-            <ImageView fx:id="footballFieldImage" fitHeight="470.0" fitWidth="820" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <ImageView fx:id="footballFieldImage" preserveRatio="true" BorderPane.alignment="CENTER">
 
             </ImageView>
         </Pane>
@@ -37,7 +37,7 @@
             <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="27.0" style="visibility: hidden"/>
 
             <Label fx:id="frameText" prefHeight="19.0" prefWidth="70" text="Frame:"/>
-            <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="0" textAlignment="RIGHT"/>
+            <Label fx:id="frameNumberField" prefHeight="19.0" prefWidth="70" text="1" textAlignment="RIGHT"/>
             <TextField fx:id="frameNumberTextField" prefHeight="19" prefWidth="70" onKeyReleased="#handleEnterPressed" />
 
             <Separator orientation="VERTICAL" prefHeight="33.0" prefWidth="48.0" style="visibility: hidden"/>
@@ -87,6 +87,28 @@
                     </Insets>
                 </VBox.margin>
             </Button>
+
+            <Button fx:id="removeAllMarksForCurrentFrame" mnemonicParsing="false" onAction="#removeAllMarksForCurrentFrame" prefHeight="26.0"
+                    prefWidth="200.0" text="Obriši sve oznake u frameu" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>10</top>
+                        <bottom>10</bottom>
+                    </Insets>
+                </VBox.margin>
+            </Button>
+
+            <Button fx:id="resetScalingAndTransformation" mnemonicParsing="false" onAction="#resetScalingAndTransformation" prefHeight="26.0"
+                    prefWidth="200.0" text="Resetiraj uvećanje" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>10</top>
+                        <bottom>10</bottom>
+                    </Insets>
+                </VBox.margin>
+            </Button>
+
+
 
             <AnchorPane prefHeight="34.0" prefWidth="179.0"
                         style="-fx-border-color: #d6d6d6; -fx-border-width: 1 0 0 0;">

@@ -1,5 +1,7 @@
 package hr.fer.zemris.projekt;
 
+import javafx.scene.paint.Color;
+
 /**
  * Created by bmihaela.
  */
@@ -15,7 +17,7 @@ public class DrawingUtil {
 	 * @param y Y coordinate
 	 * @return A rectangle object (Instance of the <b>javafx.scene.shape.Rectangle</b> class)
 	 */
-	 public static EditRectangle drawRectangle(double x, double y, double beginningX, double beginningY) {
+	 public static EditRectangle createRectangle(double x, double y, double beginningX, double beginningY) {
 		double width = Math.abs(beginningX - x);
 		double height = Math.abs(beginningY - y);
 
@@ -23,15 +25,24 @@ public class DrawingUtil {
 		double startY = beginningY < y ? beginningY : y;
 
 		EditRectangle rectangle = new EditRectangle(startX, startY, width, height);
-		setProperties(rectangle);
+		setDefaultProperties(rectangle);
 
 		return rectangle;
 	 }
 
-	public static void setProperties(EditRectangle rectangle){
+	public static void setDefaultProperties(EditRectangle rectangle){
 		rectangle.setDisable(false);
 		rectangle.setFill(null);
-		rectangle.setStroke(javafx.scene.paint.Color.RED);
+		rectangle.setOriginalColor(Color.RED);
+		rectangle.setStroke(rectangle.getOriginalColor());
 		rectangle.setStrokeWidth(1);
+	}
+
+	public static void translateProperties(EditRectangle fromRectangle, EditRectangle toRectnagle){
+		toRectnagle.setDisable(fromRectangle.isDisable());
+		toRectnagle.setFill(fromRectangle.getFill());
+		toRectnagle.setOriginalColor(fromRectangle.getOriginalColor());
+		toRectnagle.setStroke(fromRectangle.getStroke());
+		toRectnagle.setStrokeWidth(fromRectangle.getStrokeWidth());
 	}
 }

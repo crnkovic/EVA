@@ -5,8 +5,12 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.*;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,17 +22,23 @@ import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 
 
 public class Controller implements Initializable {
-	private static final float DISPLAY_WIDTH = (float) 820.0;
-	private static final float DISPLAY_HEIGHT = (float) 470.0;
+	private static final float DEFAULT_DISPLAY_WIDTH = (float) 820.0;
+
+	private static final float UNITS_SCROLLED_MAGNIFY = 1.2f;
+	private static final float UNITS_SCROLLED_DECREASE = 0.8f;
 	/**
 	 * Current window scene.
 	 */
@@ -141,15 +151,15 @@ public class Controller implements Initializable {
 	@FXML
 	private TextField frameNumberTextField;
 
-	/**
-	 * List containing drawn rectangles.
-	 */
-	private List<EditRectangle> drawnRectangles;
 
-	/**
-	 * List containing indices of removed frames.
-	 */
-	static List<Integer> removedFrames = new ArrayList<>();
+	private List<EditRectangle> currentFrameRectangles;
+
+	private AffineTransform affineTransform;
+
+	private double videoWidth;
+	private double videoHeight;
+	private boolean repaintInMotion;
+
 	public Controller() throws IOException, JCodecException {
 	}
 
@@ -195,6 +205,11 @@ public class Controller implements Initializable {
 		evaluationMainApp.setVideoPath(file.getPath());
 		int numberOfFrames = VideoUtil.getNumberOfFrames(file.getPath());
 
+		BufferedImage bufferedImage = VideoUtil.getFrame(file.getPath(), 0);
+		videoHeight = bufferedImage.getHeight() * (videoHeight / bufferedImage.getWidth());
+		affineTransform = new AffineTransform();
+		affineTransform.scale(videoWidth / bufferedImage.getWidth(), videoWidth / bufferedImage.getWidth());
+
 		// Set up slider
 		frameSlider.setMax(numberOfFrames);
 		frameSlider.setMin(1);
@@ -203,21 +218,97 @@ public class Controller implements Initializable {
 		// Reset ground truth file
 		evaluationMainApp.setEvaluationFile(null);
 
-		File tempDir = new File("./temp");
-		tempDir.mkdir();
 
-		if (!tempDir.canWrite()) {
-			throw new IOException("Ne može se pisati u \"temp\" datoteku.");
+		// Set up the reference to the dumping
+
+		setLabelForSliderValue();
+		frameSlider.setDisable(false);
+		setSelectedFrame(1);
+	}
+
+
+	private EditRectangle scaleRectangle(EditRectangle rectangle) {
+		EditRectangle rectangle1 = new EditRectangle();
+		rectangle1.setX((rectangle.getX() * affineTransform.getScaleX()) + affineTransform.getTranslateX());
+		rectangle1.setY((rectangle.getY() * affineTransform.getScaleY()) + affineTransform.getTranslateY());
+		rectangle1.setHeight((rectangle.getHeight() * affineTransform.getScaleY()));
+		rectangle1.setWidth(rectangle.getWidth() * affineTransform.getScaleX());
+		DrawingUtil.translateProperties(rectangle, rectangle1);
+		return rectangle1;
+	}
+
+	private EditRectangle unscaleRectangle(EditRectangle rectangle) {
+		EditRectangle rectangle1 = new EditRectangle();
+		rectangle1.setX((rectangle.getX() - affineTransform.getTranslateX()) / affineTransform.getScaleX());
+		rectangle1.setY((rectangle.getY() - affineTransform.getTranslateY()) / affineTransform.getScaleY());
+		rectangle1.setHeight((rectangle.getHeight() / affineTransform.getScaleY()));
+		rectangle1.setWidth(rectangle.getWidth() / affineTransform.getScaleX());
+		DrawingUtil.translateProperties(rectangle, rectangle1);
+		return rectangle1;
+	}
+
+
+	public void drawTemporaryRectangleOnImageView(EditRectangle temporary) {
+		imagePane.getChildren().remove(lastRectangle);
+		lastRectangle = temporary;
+		imagePane.getChildren().add(temporary);
+	}
+
+	public void drawRectangleOnImageView(EditRectangle rectangle) {
+		imagePane.getChildren().add(rectangle);
+		imagePane.getChildren().remove(lastRectangle);
+		EditRectangle unscaleRectangle = unscaleRectangle(rectangle);
+		currentFrameRectangles.add(unscaleRectangle);
+		lastRectangle = null;
+
+	}
+
+
+	private void repaintElements() throws IOException, JCodecException {
+		BufferedImage bufferedImage = getImageForFrame(Integer.parseInt(frameNumberField.getText()));
+		videoHeight = bufferedImage.getHeight() * (videoWidth / bufferedImage.getWidth());
+
+		Iterator iterator = imagePane.getChildren().iterator();
+		while (iterator.hasNext()) {
+			Node node = (Node) iterator.next();
+			if (node instanceof EditRectangle) {
+				iterator.remove();
+			}
 		}
 
-		// Set up the reference to the dumping directory in the main application
-		evaluationMainApp.setDumpDir(tempDir);
+		for (EditRectangle rectangle : currentFrameRectangles) {
+			EditRectangle scaledRectangle = scaleRectangle(rectangle);
+			if (canShow(scaledRectangle)) {
+				imagePane.getChildren().add(scaledRectangle);
+			}
+		}
 
-		setSelectedFrame(1);
-		setLabelForSliderValue();
+		AffineTransformOp affineTransformOp = new AffineTransformOp(affineTransform, AffineTransformOp.TYPE_BILINEAR);
+		bufferedImage = affineTransformOp.filter(bufferedImage, null);
+		BufferedImage imageWhite = new BufferedImage((int) videoWidth, (int) videoHeight, BufferedImage.TYPE_INT_ARGB);
+		imageWhite.getGraphics().setColor(new Color(235, 235, 235));
+		imageWhite.getGraphics().fillRect(0, 0, (int) videoWidth, (int) videoHeight);
+		imageWhite.setData(bufferedImage.getData());
 
-		frameSlider.setDisable(false);
+		Image image = SwingFXUtils.toFXImage(imageWhite, null);
+
+//		footballFieldImage.setScaleX(affineTransform.getScaleX());
+//		footballFieldImage.setScaleY(affineTransform.getScaleY());
+//		footballFieldImage.setTranslateX(affineTransform.getTranslateX());
+//		footballFieldImage.setTranslateY(affineTransform.getTranslateY());
+		footballFieldImage.setImage(image);
+		repaintInMotion = true;
+		evaluationMainApp.pack();
 	}
+
+	private boolean canShow(EditRectangle scaledRectangle) {
+		if (scaledRectangle.getWidth() + scaledRectangle.getX() < videoWidth && scaledRectangle.getHeight() +
+				scaledRectangle.getY() < videoHeight) {
+			return true;
+		}
+		return false;
+	}
+
 
 	@FXML
 	public void loadRectanglesFromFile() throws IOException, JCodecException {
@@ -228,17 +319,22 @@ public class Controller implements Initializable {
 		}
 
 		Set<EditRectangle> rectangles = rectanglesForAFrame((int) Math.floor(frameSlider.getValue()));
+		rectangles.forEach(z -> {
+			DrawingUtil.setDefaultProperties(z);
+			z.setOriginalColor(javafx.scene.paint.Color.CORNSILK);
+			z.setStroke(z.getOriginalColor());
+		});
 
-		drawnRectangles.addAll(rectangles);
+		currentFrameRectangles.addAll(rectangles);
+		repaintElements();
 
-		for (EditRectangle rectangle : rectangles) {
-			rectangle.setDisable(false);
-			rectangle.setFill(null);
-			rectangle.setStroke(javafx.scene.paint.Color.RED);
-			rectangle.setStrokeWidth(1);
-
-			imagePane.getChildren().add(rectangle);
-		}
+//		drawnRectangles.addAll(rectangles);
+//
+//		for (EditRectangle rectangle : rectangles) {
+//			DrawingUtil.setDefaultProperties(rectangle);
+//
+//			imagePane.getChildren().add(rectangle);
+//		}
 	}
 
 	/**
@@ -254,6 +350,25 @@ public class Controller implements Initializable {
 		fileChooser.setTitle("Odaberite datoteku s referentnim oznakama");
 
 		evaluationMainApp.setEvaluationFile(fileChooser.showOpenDialog(scene.getWindow()));
+	}
+
+
+	/**
+	 * returns the index the first element in set that equals value, return -1 if no element equals value
+	 *
+	 * @param set
+	 * @param value
+	 * @return
+	 */
+	public static int getIndex(Set<? extends Object> set, Object value) {
+		int result = 0;
+		for (Object entry : set) {
+			if (entry.equals(value)) {
+				return result;
+			}
+			result++;
+		}
+		return -1;
 	}
 
 
@@ -305,38 +420,65 @@ public class Controller implements Initializable {
 			// Get ground truth rectangles and user-defined rectangles for this specific frame
 			Set<EditRectangle> groundTruthRectangles = evaluationMainApp.getMarkedFrame(frameNumber);
 			Set<EditRectangle> detectedRectangles = rectanglesForAFrame(frameNumber);
+			Set<EditRectangle> generatorRectangles = rectanglesForAFrame(frameNumber);
 
 			// Set false negatives count to all detected rectangles size, so we can decrement it once we hit a
 			// rectangle
 			falseNegatives += groundTruthRectangles.size();
 
-			for (javafx.scene.shape.Rectangle generatorRectangle : detectedRectangles) {
+			List<Integer> takenRectangles = new LinkedList<>();
+			for (javafx.scene.shape.Rectangle generatorRectangle : generatorRectangles) {
 				boolean hit = false;
 
-				System.out.println("asasddsa");
-				for (javafx.scene.shape.Rectangle groundTruthRectangle : groundTruthRectangles) {
-					if (computeJaccardIndex(groundTruthRectangle, generatorRectangle) > Float.parseFloat(jaccardIndex
-							.getText())) {
-						// We have hit it, well done, increment the true positive and decrement the false negative!
+				Map<Integer, Double> groundTruthIndexJaccardMap = new HashMap<>();
+				for (EditRectangle groundTruthRectangle : groundTruthRectangles) {
+					if (takenRectangles.contains(getIndex(groundTruthRectangles, groundTruthRectangle))) {
+						continue;
+					}
+					double jaccIndex = computeJaccardIndex(groundTruthRectangle, generatorRectangle);
+					if (jaccIndex > Float.parseFloat(jaccardIndex.getText())) {
+						//We have found a rectangle that fits, remember that one and look for a one that fits better
+						int GTRectIndex = getIndex(groundTruthRectangles, groundTruthRectangle);
+						groundTruthIndexJaccardMap.put(GTRectIndex, jaccIndex);
 						hit = true;
-						truePositives++;
-						falseNegatives--;
-
-						break;
 					}
 				}
 
 				// We haven't hit it? False positive it seems.
 				if (!hit) {
 					falsePositives++;
+				}else{
+					// We hit it, well done, increment true positive and decrement false negative!
+					// Find out which one fits the most and add it to the takenRectangles list
+					int bestIndex = 0;
+					double maxValue = 0;
+					boolean firstElement = true;
+					for (int index:groundTruthIndexJaccardMap.keySet()) {
+						if(firstElement){
+							bestIndex=index;
+							maxValue=groundTruthIndexJaccardMap.get(index);
+							firstElement=false;
+						}
+						double jaccIndex = groundTruthIndexJaccardMap.get(index);
+						if(jaccIndex > maxValue){
+							bestIndex=index;
+							maxValue=jaccIndex;
+						}
+					}
+					takenRectangles.add(bestIndex);
+
+					truePositives++;
+					falseNegatives--;
+
+//					break;
 				}
 			}
 		}
 
-		System.out.println(truePositives);
-		System.out.println(falsePositives);
-		System.out.println(falseNegatives);
 
+		System.out.println("TP:"+truePositives);
+		System.out.println("FP:"+falsePositives);
+		System.out.println("FN:"+falseNegatives);
 		// Compute all necessary properties
 		float recall = ComputationUtils.computeRecall(truePositives, falseNegatives);
 		float precision = ComputationUtils.computePrecision(truePositives, falsePositives);
@@ -352,9 +494,7 @@ public class Controller implements Initializable {
 		}else{
 			f1Value.setText(String.valueOf(f1));
 		}
-
 	}
-
 
 
 	/**
@@ -419,26 +559,20 @@ public class Controller implements Initializable {
 	 */
 	@FXML
 	public void saveMarks(ActionEvent actionEvent) {
-		if(!evaluationMainApp.isVideoDirSet()){
-			Message.warning("Upozorenje!","Video nije učitan.");
+		if (!evaluationMainApp.isVideoDirSet()) {
+			Message.warning("Upozorenje!", "Video nije učitan.");
 		}
-		// Get map of all marked frames from the application
-		Map<Integer, Set<EditRectangle>> markedFrames = evaluationMainApp.getMarkedFrames();
 
-		// Calculate frame number
-		int frameNumber = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long)Math.floor(frameSlider.getValue()));
-		frameNumber = Integer.parseInt(frameNumberField.getText());
+		int frameNumber = Integer.parseInt(frameNumberField.getText());
 		// Get all drawn rectangles in this frame and save them to the markedFrames map
-		Set<EditRectangle> rectangles = new HashSet<>();
-		rectangles.addAll(drawnRectangles);
-		markedFrames.put(frameNumber, rectangles);
+		Set<EditRectangle> rectanglesToBeSaved = new HashSet<>(currentFrameRectangles);
+		evaluationMainApp.updateMarkedFrame(frameNumber, rectanglesToBeSaved);
 
 		// Add this frame number to the marked frames list if it's not already there
 		if (!markedFramesList.getItems().contains(String.valueOf(frameNumber))) {
 			markedFramesList.getItems().add(String.valueOf(frameNumber));
 		}
 	}
-
 
 
 	/**
@@ -452,10 +586,33 @@ public class Controller implements Initializable {
 	public void setUp(Scene scene, EvaluationMain evaluationMain) {
 		this.scene = scene;
 		this.evaluationMainApp = evaluationMain;
+		affineTransform = new AffineTransform();
+		videoWidth = DEFAULT_DISPLAY_WIDTH;
+		currentFrameRectangles = new ArrayList<>();
+		scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+			if (!evaluationMain.isVideoDirSet()) {
+				return;
+			}
+			if (repaintInMotion) {
+				repaintInMotion = false;
+				return;
+			}
+			int changedIntWidth = newValue.intValue() - oldValue.intValue();
 
-		drawnRectangles = new ArrayList<>();
+			double newVideoWidth = videoWidth + changedIntWidth;
+			if (newVideoWidth > DEFAULT_DISPLAY_WIDTH) {
+
+				videoWidth = newVideoWidth;
+				try {
+					repaintElements();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (JCodecException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
-
 
 	/**
 	 * "Sets" the selected frame by displaying it and draws any rectangles that were previously drawn.
@@ -467,30 +624,12 @@ public class Controller implements Initializable {
 	private void setSelectedFrame(int number) throws IOException, JCodecException {
 		selectedRectangle = null;
 
-		for (EditRectangle drawnRectangle : drawnRectangles) {
-			drawnRectangle.setStroke(javafx.scene.paint.Color.RED);
-		}
-
-		BufferedImage fieldImage = getImageForFrame(number);
-		Image image = SwingFXUtils.toFXImage(fieldImage, null);
-
-		// Display (draw) the frame to the user
-		footballFieldImage.setImage(image);
-
 		Set<EditRectangle> rectanglesToDraw = evaluationMainApp.getMarkedFrame(number);
-
-		imagePane.getChildren().removeAll(drawnRectangles);
-		drawnRectangles.clear();
-
-		// There are any rectangles to be drawn?
+		currentFrameRectangles.clear();
 		if (rectanglesToDraw != null) {
-			// Loop through the rectangles to be drawn and draw them
-			for (EditRectangle rectangle : rectanglesToDraw) {
-				drawnRectangles.add(rectangle);
-
-				imagePane.getChildren().add(rectangle);
-			}
+			currentFrameRectangles.addAll(rectanglesToDraw);
 		}
+		repaintElements();
 	}
 
 	/**
@@ -502,7 +641,7 @@ public class Controller implements Initializable {
 	 * @throws JCodecException JCodecException
 	 */
 	private BufferedImage getImageForFrame(int number) throws IOException, JCodecException {
-		int frameNumber = number - 1;
+		int frameNumber = number;
 		String format = "png";
 
 		File frameFile = evaluationMainApp.getDumpDir()
@@ -578,11 +717,11 @@ public class Controller implements Initializable {
 								// Structure of this variable is defined in this method's JavaDoc.
 								String[] property = line.split(",");
 								rectangles.add(new EditRectangle(
-										Double.parseDouble(property[5]) * evaluationMainApp.getWidthMultiplier(),
-										Double.parseDouble(property[6]) * evaluationMainApp.getWidthMultiplier() -
-												Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier(),
-										Double.parseDouble(property[7]) * evaluationMainApp.getWidthMultiplier(),
-										Double.parseDouble(property[8]) * evaluationMainApp.getWidthMultiplier())
+										Double.parseDouble(property[5]),
+										Double.parseDouble(property[6]) -
+												Double.parseDouble(property[8]),
+										Double.parseDouble(property[7]),
+										Double.parseDouble(property[8]))
 								);
 							}
 					);
@@ -599,7 +738,8 @@ public class Controller implements Initializable {
 	 * @return Frame number depending on the slider position
 	 */
 	private int setLabelForSliderValue() {
-		int frameNumber =(int) Math.floor(frameSlider.getValue()); //getFrameNumber((long) Math.floor(frameSlider.getValue()));
+		int frameNumber = (int) Math.floor(frameSlider.getValue()); //getFrameNumber((long) Math.floor(frameSlider
+		// .getValue()));
 		frameNumberField.setText(String.valueOf(frameNumber));
 
 		return frameNumber;
@@ -609,8 +749,8 @@ public class Controller implements Initializable {
 	@FXML
 	public void handleEnterPressed(KeyEvent e) throws IOException, JCodecException, FrameGrabber.Exception {
 		if (e.getCode() == KeyCode.ENTER) {
-			if(!evaluationMainApp.isVideoDirSet()){
-				Message.warning("Upozorenje!","Niste učitali video.");
+			if (!evaluationMainApp.isVideoDirSet()) {
+				Message.warning("Upozorenje!", "Niste učitali video.");
 				frameNumberTextField.clear();
 				return;
 			}
@@ -622,15 +762,15 @@ public class Controller implements Initializable {
 				Message.warning("Upozorenje!", "Niste unijeli cijeli broj.");
 				return;
 			}
-			int totalNumberOfFrames =VideoUtil.getNumberOfFrames(evaluationMainApp.getVideoPath());
-			if(broj > totalNumberOfFrames){
+			int totalNumberOfFrames = VideoUtil.getNumberOfFrames(evaluationMainApp.getVideoPath());
+			if (broj > totalNumberOfFrames) {
 				broj = totalNumberOfFrames;
 			}
 
-			setSelectedFrame(broj);
-			frameSlider.setValue(broj-1);
+			frameSlider.setValue(broj);
 			frameNumberField.setText(String.valueOf(broj));
 			frameNumberTextField.clear();
+			setSelectedFrame(broj);
 		}
 	}
 
@@ -656,25 +796,44 @@ public class Controller implements Initializable {
 		// User is starting to draw a rectangle!
 		footballFieldImage.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
 			// Works only if there is a video to draw on
-			if (evaluationMainApp.isDumpingDirSet() && evaluationMainApp.isVideoDirSet()) {
+			if (evaluationMainApp.isVideoDirSet()) {
+				footballFieldImage.requestFocus();
 				beginningX = mouseEvent.getX();
 				beginningY = mouseEvent.getY();
 
 				selectedRectangle = null;
 				drawingInitialized = true;
 
-				for (EditRectangle rectangle : drawnRectangles) {
-					if (rectangle.getX() < beginningX && rectangle.getY() < beginningY && rectangle.getX() + rectangle
-							.getWidth() > beginningX && rectangle.getY() + rectangle.getHeight() > beginningY) {
-						drawingInitialized = false;
-						rectangle.setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
 
+				boolean rectangleSelected = false;
+
+				for (EditRectangle rectangle : currentFrameRectangles) {
+					EditRectangle scaledRectangle = scaleRectangle(rectangle);
+					if (scaledRectangle.getX() < beginningX && scaledRectangle.getY() < beginningY && scaledRectangle
+							.getX() +
+							scaledRectangle.getWidth() > beginningX
+							&& scaledRectangle.getY() + scaledRectangle.getHeight() > beginningY &&
+							!rectangleSelected) {
 						selectedRectangle = rectangle;
+						rectangle.select();
+						drawingInitialized = false;
 						footballFieldImage.requestFocus();
+						rectangleSelected = true;
 					} else {
-						rectangle.setStroke(javafx.scene.paint.Color.RED);
+						rectangle.unSelect();
 					}
 				}
+
+				if (rectangleSelected) {
+					try {
+						repaintElements();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (JCodecException e) {
+						e.printStackTrace();
+					}
+				}
+
 			}
 		});
 
@@ -682,199 +841,300 @@ public class Controller implements Initializable {
 
 
 		footballFieldImage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
-			if(selectedRectangle == null){
+			boolean repaint = false;
+			if (!evaluationMainApp.isVideoDirSet()) {
+				return;
+			}
+			if (e.isShiftDown()) {
+				if (e.getCode().equals(KeyCode.W)) {
+					if (affineTransform.getTranslateY() < -(videoHeight * affineTransform.getScaleY()) / 2) {
+						return;
+					}
+					repaint = true;
+					AffineTransform tempTransform = new AffineTransform();
+					tempTransform.concatenate(affineTransform);
+					tempTransform.translate(0, -50);
+					affineTransform = tempTransform;
+				} else if (e.getCode().equals(KeyCode.S)) {
+					if (affineTransform.getTranslateY() > (videoHeight * affineTransform.getScaleY()) / 2) {
+						return;
+					}
+					repaint = true;
+					AffineTransform tempTransform = new AffineTransform();
+					tempTransform.concatenate(affineTransform);
+					tempTransform.translate(0, 50);
+					affineTransform = tempTransform;
+				} else if (e.getCode().equals(KeyCode.A)) {
+					if (affineTransform.getTranslateX() < -(videoWidth * affineTransform.getScaleX()) / 2) {
+						return;
+					}
+					repaint = true;
+					AffineTransform tempTransform = new AffineTransform();
+					tempTransform.concatenate(affineTransform);
+					tempTransform.translate(-50, 0);
+					affineTransform = tempTransform;
+				} else if (e.getCode().equals(KeyCode.D)) {
+					if (affineTransform.getTranslateX() > (videoWidth * affineTransform.getScaleX()) / 2) {
+						return;
+					}
+					repaint = true;
+					AffineTransform tempTransform = new AffineTransform();
+					tempTransform.concatenate(affineTransform);
+					tempTransform.translate(50, 0);
+					affineTransform = tempTransform;
+				}
+			} else if (e.getCode() == KeyCode.F) {
+				if (repaintInMotion) {
+					repaintInMotion = false;
+					return;
+				}
+				int changedIntWidth = 50;
+				double newVideoWidth = videoWidth + changedIntWidth;
+				videoWidth = newVideoWidth;
+				repaint = true;
+			} else if (e.getCode() == KeyCode.H) {
+				if (repaintInMotion) {
+					repaintInMotion = false;
+					return;
+				}
+				int changedIntWidth = -50;
+				double newVideoWidth = videoWidth + changedIntWidth;
+				if (newVideoWidth > DEFAULT_DISPLAY_WIDTH) {
+					videoWidth = newVideoWidth;
+					repaint = true;
+				} else {
+					videoWidth = DEFAULT_DISPLAY_WIDTH;
+					repaint = true;
+				}
+			} else if (e.getCode() == KeyCode.T) {
+				try {
+					resetScalingAndTransformation(null);
+					return;
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (JCodecException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+			if (repaint) {
+				try {
+					repaintElements();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (JCodecException e1) {
+					e1.printStackTrace();
+				}
+				return;
+			}
+
+			if (selectedRectangle == null) {
 				return;
 			}
 			if (e.getCode() == KeyCode.DELETE) {
-				int frame = (int)Math.floor(frameSlider.getValue());//getFrameNumber((long) Math.floor(frameSlider.getValue()));
 
-				int indexRectaZaObrisati = 0;
-				for (EditRectangle rectangle : drawnRectangles) {
-					if (rectangle.equals(selectedRectangle)) {
-						break;
+				int index = currentFrameRectangles.indexOf(selectedRectangle);
+				currentFrameRectangles.remove(selectedRectangle);
+				if (currentFrameRectangles.size() > 0) {
+					if (index >= currentFrameRectangles.size()) {
+						selectedRectangle = currentFrameRectangles.get(0);
+					} else {
+						selectedRectangle = currentFrameRectangles.get(index);
 					}
-
-					indexRectaZaObrisati++;
+					selectedRectangle.select();
 				}
 
-
-
-				drawnRectangles.remove(selectedRectangle);
-				imagePane.getChildren().remove(selectedRectangle);
-
-				Set<EditRectangle> remainingRectangles = evaluationMainApp.getMarkedFrame(frame);
-				if (remainingRectangles != null) {
-
-					System.out.println("index:"+indexRectaZaObrisati);
-					remainingRectangles.remove(selectedRectangle);
-
-				}
-				if(indexRectaZaObrisati>=1){
-					//nadji sljedeceg i postavi ga kao odabranog ako nismo obrisali zadnjeg
-					if(indexRectaZaObrisati==drawnRectangles.size()){
-						indexRectaZaObrisati--;
-					}
-					drawnRectangles.get(indexRectaZaObrisati).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
-					selectedRectangle = drawnRectangles.get(indexRectaZaObrisati);
-				}
-				evaluationMainApp.updateMarkedFrame(frame, remainingRectangles);
 			} else if (e.getCode() == KeyCode.P) {
-				int i = 0;
 
-				for (EditRectangle rectangle : drawnRectangles) {
-					if (rectangle.equals(selectedRectangle)) {
+				int index = currentFrameRectangles.indexOf(selectedRectangle);
+				selectedRectangle.unSelect();
+				int rectanglesPased = 0;
+				while (true) {
+					index--;
+					if (index < 0) {
+						selectedRectangle = currentFrameRectangles.get(currentFrameRectangles.size() - 1);
+						index = currentFrameRectangles.size() - 1;
+					} else {
+						selectedRectangle = currentFrameRectangles.get(index);
+					}
+					if (canShow(scaleRectangle(selectedRectangle))) {
 						break;
 					}
-
-					i++;
+					rectanglesPased++;
+					if (rectanglesPased == currentFrameRectangles.size()) {
+						System.out.println("tu");
+						return;
+					}
 				}
+				selectedRectangle.select();
 
-				drawnRectangles.get(i).setStroke(javafx.scene.paint.Color.RED);
-
-				if (i == 0) {
-					i = drawnRectangles.size();
-				}
-
-				drawnRectangles.get(i - 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
-				selectedRectangle = drawnRectangles.get(i - 1);
 			} else if (e.getCode() == KeyCode.N) {
-				int i = 0;
-
-				for (EditRectangle rectangle : drawnRectangles) {
-					if (rectangle.equals(selectedRectangle)) {
+				int index = currentFrameRectangles.indexOf(selectedRectangle);
+				selectedRectangle.unSelect();
+				int rectanglesPassed = 0;
+				while (true) {
+					index++;
+					if (index >= currentFrameRectangles.size()) {
+						selectedRectangle = currentFrameRectangles.get(0);
+						index = 0;
+					} else {
+						selectedRectangle = currentFrameRectangles.get(index);
+					}
+					if (canShow(scaleRectangle(selectedRectangle))) {
 						break;
 					}
-
-					i++;
-				}
-
-				drawnRectangles.get(i).setStroke(javafx.scene.paint.Color.RED);
-
-				if (i == drawnRectangles.size() - 1) {
-					i = -1;
-				}
-
-				drawnRectangles.get(i + 1).setStroke(javafx.scene.paint.Color.CORNFLOWERBLUE);
-				selectedRectangle = drawnRectangles.get(i + 1);
-			}else if(e.isShiftDown()){
-
-				if(e.getCode().equals(KeyCode.I)){
-					if(selectedRectangle.getHeight() == 1){
+					rectanglesPassed++;
+					if (rectanglesPassed == currentFrameRectangles.size()) {
 						return;
 					}
-					selectedRectangle.setHeight(selectedRectangle.getHeight()-1);
-					selectedRectangle.setY(selectedRectangle.getY()+1);
+				}
+				selectedRectangle.select();
 
-				}else if(e.getCode().equals(KeyCode.K)){
-					if(selectedRectangle.getHeight() == 1){
+			} else if (e.isShiftDown()) {
+
+				if (e.getCode().equals(KeyCode.I)) {
+					if (selectedRectangle.getHeight() == 1) {
 						return;
 					}
-					selectedRectangle.setHeight(selectedRectangle.getHeight()-1);
 
-				}else if(e.getCode().equals(KeyCode.J)){
-					if(selectedRectangle.getWidth() == 1){
+					selectedRectangle.setHeight(selectedRectangle.getHeight() - 1);
+					selectedRectangle.setY(selectedRectangle.getY() + 1);
+
+				} else if (e.getCode().equals(KeyCode.K)) {
+					if (selectedRectangle.getHeight() == 1) {
 						return;
 					}
-					selectedRectangle.setWidth(selectedRectangle.getWidth()-1);
-					selectedRectangle.setX(selectedRectangle.getX()+1);
+					selectedRectangle.setHeight(selectedRectangle.getHeight() - 1);
 
-				}else if(e.getCode().equals(KeyCode.L)){
-					if(selectedRectangle.getWidth() == 1){
+				} else if (e.getCode().equals(KeyCode.J)) {
+					if (selectedRectangle.getWidth() == 1) {
 						return;
 					}
-					selectedRectangle.setWidth(selectedRectangle.getWidth()-1);
+					selectedRectangle.setWidth(selectedRectangle.getWidth() - 1);
+					selectedRectangle.setX(selectedRectangle.getX() + 1);
 
-				}
-
-			}else if(e.getCode().equals(KeyCode.W)){
-				if(selectedRectangle.getY() == 1){
-					return;
-				}
-				selectedRectangle.setY(selectedRectangle.getY()-1);
-
-			}else if(e.getCode().equals(KeyCode.S)){
-					if(selectedRectangle.getY()+selectedRectangle.getHeight()
-                            >=
-                            evaluationMainApp.getVideoHeight()*evaluationMainApp.getWidthMultiplier()-2
-					) {
-
+				} else if (e.getCode().equals(KeyCode.L)) {
+					if (selectedRectangle.getWidth() == 1) {
 						return;
 					}
-				selectedRectangle.setY(selectedRectangle.getY()+1);
+					selectedRectangle.setWidth(selectedRectangle.getWidth() - 1);
 
-			}else if(e.getCode().equals(KeyCode.A)){
-				if(selectedRectangle.getX()==1){
+				}
+			} else if (e.getCode().equals(KeyCode.W)) {
+				if (affineTransform.getScaleY() * (selectedRectangle.getY() - 1) + affineTransform.getTranslateY() <=
+						0) {
 					return;
 				}
-				selectedRectangle.setX(selectedRectangle.getX()-1);
-
-			}else if(e.getCode().equals(KeyCode.D)){
-				if(selectedRectangle.getX()+selectedRectangle.getWidth() >= DISPLAY_WIDTH-1){
+				selectedRectangle.setY(selectedRectangle.getY() - 1);
+			} else if (e.getCode().equals(KeyCode.S)) {
+				if (affineTransform.getScaleY() * (selectedRectangle.getY() + 1 + selectedRectangle.getHeight()) +
+						affineTransform.getTranslateY() >= videoHeight) {
 					return;
 				}
-				selectedRectangle.setX(selectedRectangle.getX()+1);
-
-			}else if(e.getCode().equals(KeyCode.I)){
-				if(selectedRectangle.getY() == 1){
+				selectedRectangle.setY(selectedRectangle.getY() + 1);
+			} else if (e.getCode().equals(KeyCode.A)) {
+				if (affineTransform.getScaleX() * (selectedRectangle.getX() - 1) + affineTransform.getTranslateX() <=
+						0) {
 					return;
 				}
-				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
-				selectedRectangle.setY(selectedRectangle.getY()-1);
-
-			}else if(e.getCode().equals(KeyCode.K)){
-				if(selectedRectangle.getY()+selectedRectangle.getHeight()
-						>=
-						evaluationMainApp.getVideoHeight()*evaluationMainApp.getWidthMultiplier()-2
-						) {
-
+				selectedRectangle.setX(selectedRectangle.getX() - 1);
+			} else if (e.getCode().equals(KeyCode.D)) {
+				if (affineTransform.getScaleX() * (selectedRectangle.getX() + 1 + selectedRectangle.getWidth()) +
+						affineTransform.getTranslateX() >= videoWidth) {
 					return;
 				}
-				selectedRectangle.setHeight(selectedRectangle.getHeight()+1);
-
-			}else if(e.getCode().equals(KeyCode.J)){
-				if(selectedRectangle.getX() == 1 ){
+				selectedRectangle.setX(selectedRectangle.getX() + 1);
+			} else if (e.getCode().equals(KeyCode.I)) {
+				if (affineTransform.getScaleY() * (selectedRectangle.getY() - 1) + affineTransform.getTranslateY() <=
+						0) {
 					return;
 				}
-				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
-				selectedRectangle.setX(selectedRectangle.getX()-1);
-
-			}else if(e.getCode().equals(KeyCode.L)){
-				if(selectedRectangle.getX()+selectedRectangle.getWidth() >= DISPLAY_WIDTH-1){
+				selectedRectangle.setHeight(selectedRectangle.getHeight() + 1);
+				selectedRectangle.setY(selectedRectangle.getY() - 1);
+			} else if (e.getCode().equals(KeyCode.K)) {
+				if (affineTransform.getScaleY() * (selectedRectangle.getHeight() + 1 + selectedRectangle.getY()) +
+						affineTransform.getTranslateY() >= videoHeight) {
 					return;
 				}
-				selectedRectangle.setWidth(selectedRectangle.getWidth()+1);
+				selectedRectangle.setHeight(selectedRectangle.getHeight() + 1);
+			} else if (e.getCode().equals(KeyCode.J)) {
+				if (affineTransform.getScaleX() * (selectedRectangle.getX() - 1) + affineTransform.getTranslateX() <=
+						0) {
+					return;
+				}
+				selectedRectangle.setWidth(selectedRectangle.getWidth() + 1);
+				selectedRectangle.setX(selectedRectangle.getX() - 1);
+			} else if (e.getCode().equals(KeyCode.L)) {
+				if (affineTransform.getScaleX() * (selectedRectangle.getWidth() + 1 + selectedRectangle.getX()) +
+						affineTransform.getTranslateX() >= videoWidth) {
+					return;
+				}
+				selectedRectangle.setWidth(selectedRectangle.getWidth() + 1);
+			}
 
+			try {
+				repaintElements();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} catch (JCodecException e1) {
+				e1.printStackTrace();
+			}
+
+		});
+
+		footballFieldImage.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseEvent -> {
+			if (drawingInitialized) {
+				if (mouseEvent.getX() < videoWidth && mouseEvent.getY() < videoHeight && mouseEvent.getX() > 0 &&
+						mouseEvent.getY() > 0) {
+					EditRectangle rectangle = DrawingUtil.createRectangle(mouseEvent.getX(), mouseEvent.getY(),
+							beginningX, beginningY);
+					drawTemporaryRectangleOnImageView(rectangle);
+				} else {
+					try {
+						repaintElements();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (JCodecException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		});
 
-		// User is drawing the rectangle right now!
-		footballFieldImage.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseEvent -> {
-			if (drawingInitialized) {
-				if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage
-						.getFitHeight() && mouseEvent.getX() > 0 && mouseEvent.getY() > 0) {
-					EditRectangle rectangle = DrawingUtil.drawRectangle(mouseEvent.getX(), mouseEvent.getY(),
-							beginningX, beginningY);
 
-					imagePane.getChildren().remove(lastRectangle);
-					lastRectangle = rectangle;
-					imagePane.getChildren().add(rectangle);
-				} else {
-					imagePane.getChildren().remove(lastRectangle);
+		footballFieldImage.setOnScroll(event -> {
+			AffineTransform tempTransform = new AffineTransform();
+			tempTransform.concatenate(affineTransform);
+			if (event.getDeltaY() < 0) {
+				if (affineTransform.getTranslateX() < -(videoWidth * affineTransform.getScaleX() *
+						UNITS_SCROLLED_DECREASE) / 2 || affineTransform.getTranslateY() < -(videoHeight *
+						affineTransform.getScaleY() * UNITS_SCROLLED_DECREASE) / 2) {
+					return;
 				}
+				tempTransform.scale(UNITS_SCROLLED_DECREASE, UNITS_SCROLLED_DECREASE);
+				//umanjenje
+			} else if (event.getDeltaY() > 0) {
+				//uvecanje
+				tempTransform.scale(UNITS_SCROLLED_MAGNIFY, UNITS_SCROLLED_MAGNIFY);
+			}
+			affineTransform = tempTransform;
+			try {
+				repaintElements();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JCodecException e) {
+				e.printStackTrace();
 			}
 		});
 
 		// Draw the rectangle once user finishes dragging.
 		footballFieldImage.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseEvent -> {
 			if (drawingInitialized) {
-				if (mouseEvent.getX() < footballFieldImage.getFitWidth() && mouseEvent.getY() < footballFieldImage
-						.getFitHeight() && mouseEvent.getX() > 0 && mouseEvent.getY() > 0) {
-					EditRectangle rectangle = DrawingUtil.drawRectangle(mouseEvent.getX(), mouseEvent.getY(),
+				if (mouseEvent.getX() < videoWidth && mouseEvent.getY() < videoHeight && mouseEvent.getX() > 0 &&
+						mouseEvent.getY() > 0) {
+					EditRectangle rectangle = DrawingUtil.createRectangle(mouseEvent.getX(), mouseEvent.getY(),
 							beginningX, beginningY);
-
-					imagePane.getChildren().add(rectangle);
-					imagePane.getChildren().remove(lastRectangle);
-					drawnRectangles.add(rectangle);
+					drawRectangleOnImageView(rectangle);
 				}
 			}
 
@@ -883,8 +1143,13 @@ public class Controller implements Initializable {
 
 		markedFramesList.setCellFactory(TextFieldListCell.forListView());
 		markedFramesList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+			if (newValue == null) {
+				return;
+			}
 			int frameNumber = Integer.parseInt(newValue);
 
+			frameNumberField.setText(String.valueOf(frameNumber));
+			frameSlider.setValue(frameNumber);
 			try {
 				setSelectedFrame(frameNumber);
 			} catch (IOException | JCodecException e) {
@@ -893,8 +1158,6 @@ public class Controller implements Initializable {
 				e.printStackTrace();
 			}
 
-			frameNumberField.setText(String.valueOf(frameNumber));
-			frameSlider.setValue(frameNumber);
 		});
 	}
 
@@ -904,14 +1167,17 @@ public class Controller implements Initializable {
 		KeyEvent keyEvent = (KeyEvent) event;
 		if (keyEvent.getCode().equals(KeyCode.DELETE)) {
 			String framenumber = markedFramesList.getSelectionModel().getSelectedItems().get(0);
+			if (framenumber == null) {
+				return;
+			}
 			if (markedFramesList.getItems().contains(framenumber)) {
 				markedFramesList.getItems().remove(framenumber);
 			}
-			if (Integer.parseInt(framenumber) == setLabelForSliderValue()){// getFrameNumber(setLabelForSliderValue())) {
+			if (Integer.parseInt(framenumber) == setLabelForSliderValue()) {// getFrameNumber(setLabelForSliderValue()
+				// )) {
 				setSelectedFrame(Integer.parseInt(framenumber));
 			}
-			HashSet<EditRectangle> emptrySet = new HashSet<>();
-			evaluationMainApp.updateMarkedFrame(Integer.parseInt(framenumber), emptrySet);
+			evaluationMainApp.removeMarkedFrame(Integer.parseInt(framenumber));
 		}
 	}
 
@@ -930,7 +1196,7 @@ public class Controller implements Initializable {
 		while (line != null) {
 			//vratise
 			EditRectangle rect = EditRectangle.parse(line);
-			DrawingUtil.setProperties(rect);
+			DrawingUtil.setDefaultProperties(rect);
 			int frame = Integer.parseInt(line.split(",")[0]);
 			Set<EditRectangle> rectangles = evaluationMainApp.getMarkedFrame(frame);
 			if (rectangles == null) {
@@ -946,5 +1212,25 @@ public class Controller implements Initializable {
 		}
 		setSelectedFrame(setLabelForSliderValue());//getFrameNumber(setLabelForSliderValue()));
 
+	}
+
+	@FXML
+	public void removeAllMarksForCurrentFrame(ActionEvent actionEvent) throws IOException, JCodecException {
+		currentFrameRectangles.clear();
+		if (!evaluationMainApp.isVideoDirSet()) {
+			Message.warning("Upozorenje!", "Niste učitali video.");
+			return;
+		}
+		repaintElements();
+	}
+
+	@FXML
+	public void resetScalingAndTransformation(ActionEvent actionEvent) throws IOException, JCodecException {
+		affineTransform = new AffineTransform();
+		videoWidth = DEFAULT_DISPLAY_WIDTH;
+		if (!evaluationMainApp.isVideoDirSet()) {
+			return;
+		}
+		repaintElements();
 	}
 }

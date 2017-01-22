@@ -1,9 +1,5 @@
 package hr.fer.zemris.projekt;
 
-import javafx.geometry.Rectangle2D;
-
-import java.awt.*;
-
 public class ComputationUtils {
     /**
      * Computes Jaccard index based on the rectangle and "ground truth" rectangle properties.

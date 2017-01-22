@@ -37,15 +37,19 @@
 .menu .label, .menu-item .label {
     -fx-text-fill: #333;
 }
+#footballFieldImage{
+    -fx-padding: 2;
+    -fx-background-color: #29a0c8;
+}
 
-#evaluateButton, #loadGeneratedRectangles {
+#evaluateButton, #loadGeneratedRectangles, #removeAllMarksForCurrentFrame, #resetScalingAndTransformation{
     -fx-background-radius: 0;
     -fx-text-fill: #FFF;
     -fx-background-color: #2196F3;
     -fx-padding: 7 15;
 }
 
-#evaluateButton:hover, #loadGeneratedRectangles:hover {
+#evaluateButton:hover, #loadGeneratedRectangles:hover, #removeAllMarksForCurrentFrame:hover, #resetScalingAndTransformation:hover{
     -fx-cursor: hand;
     -fx-background-color: #0c83e1;
 }

@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.jcodec.api.JCodecException;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,21 +29,7 @@ public class EvaluationMain extends Application {
      */
     private File evaluationFile = null;
 
-    /**
-     * Rectangle area multiplier.
-     */
-    private double widthMultiplier = 1;
-
-    /**
-     * Map of marked frames.
-     * Each key-value pair consists of the index of the frame as well as list of <b>Rectangle</b> objects.
-     */
     private Map<Integer, Set<EditRectangle>> markedFrames;
-
-    /**
-     * Visina bas njihovog videa prije ucitavanja
-     */
-    private double videoHeight;
 
     /**
      * Launch the application by running the launch() method from the parent <b>Application</b> class.
@@ -56,35 +41,22 @@ public class EvaluationMain extends Application {
         launch(args);
     }
 
-    /**
-     * @return int
-     */
-    public double getWidthMultiplier() {
-        return widthMultiplier;
-    }
-
-    /**
-     * Set video file path and clean up the dumping directory so we have a fresh directory.
-     *
-     * @param videoPath Path to the video
-     * @throws IOException     IOException
-     * @throws JCodecException JCodecException
-     */
     public void setVideoPath(String videoPath) throws IOException, JCodecException {
         this.videoPath = videoPath;
 
-        // Get first frame then calculate the width of the rectangle
-        BufferedImage bufferedImage = VideoUtil.getFrame(videoPath, 0);
-
-        videoHeight= bufferedImage.getHeight();
-        System.out.println("videoHeight:"+videoHeight);
-
-        widthMultiplier = 820. / bufferedImage.getWidth();
-
-        // Clean the dumping directory when we set video path.
         if (isDumpingDirSet()) {
             removeDumpDir();
         }
+
+
+		File tempDir = new File("./temp");
+		tempDir.mkdir();
+
+		if (!tempDir.canWrite()) {
+			throw new IOException("Ne može se pisati u \"temp\" datoteku.");
+		}
+		dumpDir = tempDir;
+
     }
 
     /**
@@ -116,6 +88,8 @@ public class EvaluationMain extends Application {
             }
         }
     }
+
+
 
     /**
      * Get path to the video file.
@@ -186,12 +160,6 @@ public class EvaluationMain extends Application {
      * @return Marked frames
      */
     public Map<Integer, Set<EditRectangle>> getMarkedFrames() {
-        if (!Controller.removedFrames.isEmpty()) {
-            for (int i : Controller.removedFrames) {
-                markedFrames.remove(i);
-            }
-        }
-
         return markedFrames;
     }
 
@@ -213,8 +181,11 @@ public class EvaluationMain extends Application {
         return markedFrames.get(frameNumber);
     }
 
+    private Stage primaryStage;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        this.primaryStage= primaryStage;
         primaryStage.setTitle("Aplikacija za evaluaciju");
 
         // Empty out the marked frames map
@@ -243,12 +214,12 @@ public class EvaluationMain extends Application {
 
         primaryStage.show();
     }
+    public void pack(){
+        primaryStage.sizeToScene();
+    }
 
 	public void clearMarkedFrames() {
 	 this.markedFrames.clear();
 	}
 
-    public double getVideoHeight() {
-        return videoHeight;
-    }
 }
