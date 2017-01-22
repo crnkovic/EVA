@@ -1232,5 +1232,6 @@ public class Controller implements Initializable {
 			return;
 		}
 		repaintElements();
+		footballFieldImage.requestFocus();
 	}
 }
