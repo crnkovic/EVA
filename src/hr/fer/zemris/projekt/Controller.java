@@ -18,6 +18,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
@@ -37,6 +38,8 @@ import java.util.List;
 public class Controller implements Initializable {
 	private static final float DEFAULT_DISPLAY_WIDTH = (float) 820.0;
 
+	private  static float frameWidth;
+	private  static float frameHeight;
 	private static final float UNITS_SCROLLED_MAGNIFY = 1.2f;
 	private static final float UNITS_SCROLLED_DECREASE = 0.8f;
 	/**
@@ -206,6 +209,8 @@ public class Controller implements Initializable {
 		int numberOfFrames = VideoUtil.getNumberOfFrames(file.getPath());
 
 		BufferedImage bufferedImage = VideoUtil.getFrame(file.getPath(), 0);
+		frameWidth=bufferedImage.getWidth();
+		frameHeight=bufferedImage.getHeight();
 		videoHeight = bufferedImage.getHeight() * (videoHeight / bufferedImage.getWidth());
 		affineTransform = new AffineTransform();
 		affineTransform.scale(videoWidth / bufferedImage.getWidth(), videoWidth / bufferedImage.getWidth());
@@ -847,7 +852,7 @@ public class Controller implements Initializable {
 			}
 			if (e.isShiftDown()) {
 				if (e.getCode().equals(KeyCode.W)) {
-					if (affineTransform.getTranslateY() < -(videoHeight * affineTransform.getScaleY()) / 2) {
+					if (-affineTransform.getTranslateY()+videoHeight > frameHeight*affineTransform.getScaleX()) {
 						return;
 					}
 					repaint = true;
@@ -856,7 +861,7 @@ public class Controller implements Initializable {
 					tempTransform.translate(0, -50);
 					affineTransform = tempTransform;
 				} else if (e.getCode().equals(KeyCode.S)) {
-					if (affineTransform.getTranslateY() > (videoHeight * affineTransform.getScaleY()) / 2) {
+					if (affineTransform.getTranslateY() > 0 ) {
 						return;
 					}
 					repaint = true;
@@ -865,7 +870,8 @@ public class Controller implements Initializable {
 					tempTransform.translate(0, 50);
 					affineTransform = tempTransform;
 				} else if (e.getCode().equals(KeyCode.A)) {
-					if (affineTransform.getTranslateX() < -(videoWidth * affineTransform.getScaleX()) / 2) {
+					System.out.println(videoHeight);
+					if ((-affineTransform.getTranslateX() + DEFAULT_DISPLAY_WIDTH) > frameWidth*affineTransform.getScaleX()) {
 						return;
 					}
 					repaint = true;
@@ -874,7 +880,7 @@ public class Controller implements Initializable {
 					tempTransform.translate(-50, 0);
 					affineTransform = tempTransform;
 				} else if (e.getCode().equals(KeyCode.D)) {
-					if (affineTransform.getTranslateX() > (videoWidth * affineTransform.getScaleX()) / 2) {
+					if (affineTransform.getTranslateX() > 0) {
 						return;
 					}
 					repaint = true;
