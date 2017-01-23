@@ -16,7 +16,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacv.FrameGrabber;
@@ -30,7 +29,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
@@ -515,17 +513,18 @@ public class Controller implements Initializable {
 	 */
 	@FXML
 	public void saveFileWithMarks(ActionEvent actionEvent) throws IOException {
-		DirectoryChooser directoryChooser = new DirectoryChooser();
+
+		FileChooser directoryChooser = new FileChooser();
 		directoryChooser.setTitle("Spremi datoteku s oznakama");
 
 		// Get user chosen directory
-		File file = directoryChooser.showDialog(scene.getWindow());
-		Path directory = file.toPath();
+		File file = directoryChooser.showSaveDialog(scene.getWindow());
+//		Path directory = file.toPath();
 
 		// Create new textual file whose path is dynamically generated from the user chosen directory
 		// Also create UTF8 charset class that writes to the file
-		File txtFile = new File(directory + File.separator + "oznakeOkvira.txt");
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(txtFile), "UTF-8"));
+//		File txtFile = new File(directory + File.separator + "oznakeOkvira.txt");
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
 
 		List<Integer> frameNumbersList = new ArrayList<>();
 		frameNumbersList.addAll(evaluationMainApp.getMarkedFrames().keySet());
