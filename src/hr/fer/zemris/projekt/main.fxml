@@ -52,10 +52,14 @@
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem fx:id="video" mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
                 <MenuItem fx:id="file" mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s trajektorijama"/>
-                <MenuItem fx:id="gFile" mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabiljezenim oznakama"/>
+                <MenuItem fx:id="gFile" mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabilježenim oznakama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Upute">
+                <MenuItem mnemonicParsing="false" onAction="#displayInstructions" text="Prikaži upute"/>
+                <MenuItem mnemonicParsing="false" onAction="#displayKeyboardShortcuts" text="Prikaži prečace"/>
             </Menu>
         </MenuBar>
     </top>
@@ -79,7 +83,7 @@
             </Button>
 
             <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#loadRectanglesFromFile" prefHeight="26.0"
-                    prefWidth="200.0" text="Prikaži detektirane oznake" VBox.vgrow="ALWAYS">
+                    prefWidth="200.0" text="Oznake generatora" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
                         <top>10</top>
@@ -89,7 +93,7 @@
             </Button>
 
             <Button fx:id="removeAllMarksForCurrentFrame" mnemonicParsing="false" onAction="#removeAllMarksForCurrentFrame" prefHeight="26.0"
-                    prefWidth="200.0" text="Obriši sve oznake u frameu" VBox.vgrow="ALWAYS">
+                    prefWidth="200.0" text="Obriši oznake framea" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
                         <top>10</top>

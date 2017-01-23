@@ -16,19 +16,25 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import org.bytedeco.javacpp.opencv_core;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
@@ -160,6 +166,9 @@ public class Controller implements Initializable {
 	private double videoWidth;
 	private double videoHeight;
 	private boolean repaintInMotion;
+	private static final String shortcutsFile= "precaci.txt";
+	private static final String instructionsFile="./upute.txt";
+
 
 	public Controller() throws IOException, JCodecException {
 	}
@@ -324,7 +333,7 @@ public class Controller implements Initializable {
 		Set<EditRectangle> rectangles = rectanglesForAFrame((int) Math.floor(frameSlider.getValue()));
 		rectangles.forEach(z -> {
 			DrawingUtil.setDefaultProperties(z);
-			z.setOriginalColor(javafx.scene.paint.Color.CORNSILK);
+			z.setOriginalColor(javafx.scene.paint.Color.ORANGE);
 			z.setStroke(z.getOriginalColor());
 		});
 
@@ -490,8 +499,18 @@ public class Controller implements Initializable {
 		System.out.println("precision:" + precision);
 		System.out.println("f1:" + f1);
 
-		recallValue.setText(String.valueOf(recall) + "%");
-		precisionValue.setText(String.valueOf(precision) + "%");
+		if(!Float.isNaN(recall)){
+			recallValue.setText(String.valueOf(recall) + "%");
+		}else{
+			recallValue.setText(String.valueOf(recall));
+		}
+
+		if(!Float.isNaN(precision)){
+			precisionValue.setText(String.valueOf(precision) + "%");
+		}else{
+			precisionValue.setText(String.valueOf(precision));
+		}
+
 		if(!Float.isNaN(f1)){
 			f1Value.setText(String.valueOf(100*f1) + "%");
 		}else{
@@ -513,7 +532,6 @@ public class Controller implements Initializable {
 	 */
 	@FXML
 	public void saveFileWithMarks(ActionEvent actionEvent) throws IOException {
-
 		FileChooser directoryChooser = new FileChooser();
 		directoryChooser.setTitle("Spremi datoteku s oznakama");
 
@@ -854,6 +872,7 @@ public class Controller implements Initializable {
 					if (-affineTransform.getTranslateY()+videoHeight > frameHeight*affineTransform.getScaleX()) {
 						return;
 					}
+
 					repaint = true;
 					AffineTransform tempTransform = new AffineTransform();
 					tempTransform.concatenate(affineTransform);
@@ -1238,5 +1257,34 @@ public class Controller implements Initializable {
 		}
 		repaintElements();
 		footballFieldImage.requestFocus();
+	}
+
+	public void displayKeyboardShortcuts(ActionEvent actionEvent) throws IOException {
+		String shortcutsData = new String(Files.readAllBytes(Paths.get(shortcutsFile)));
+		Stage newStage = new Stage();
+		newStage.initModality(Modality.APPLICATION_MODAL);
+		evaluationMainApp.addChild(newStage);
+		VBox vBox = new VBox(20);
+		vBox.setPrefWidth(300);
+		vBox.setPrefHeight(500);
+		vBox.getChildren().add(new Text(shortcutsData));
+		Scene scene = new Scene(vBox);
+		newStage.setScene(scene);
+		newStage.show();
+	}
+
+	public void displayInstructions(ActionEvent actionEvent) throws IOException {
+		String instructionsData = new String(Files.readAllBytes(Paths.get(instructionsFile)));
+		Stage newStage = new Stage();
+		newStage.initModality(Modality.APPLICATION_MODAL);
+		evaluationMainApp.addChild(newStage);
+		VBox vBox = new VBox(20);
+		vBox.setPrefWidth(300);
+		vBox.setPrefHeight(500);
+		vBox.getChildren().add(new Text(instructionsData));
+		Scene scene = new Scene(vBox);
+		newStage.setScene(scene);
+		newStage.show();
+
 	}
 }

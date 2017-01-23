@@ -183,6 +183,9 @@ public class EvaluationMain extends Application {
 
     private Stage primaryStage;
 
+    public  void addChild(Stage stage){
+        stage.initOwner(primaryStage);
+    }
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage= primaryStage;
