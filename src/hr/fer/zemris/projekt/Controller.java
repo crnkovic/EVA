@@ -1267,7 +1267,10 @@ public class Controller implements Initializable {
 		VBox vBox = new VBox(20);
 		vBox.setPrefWidth(300);
 		vBox.setPrefHeight(500);
-		vBox.getChildren().add(new Text(shortcutsData));
+		vBox.setMaxWidth(300);
+		Text text = new Text(shortcutsData);
+		text.setWrappingWidth(500);
+		vBox.getChildren().add(text);
 		Scene scene = new Scene(vBox);
 		newStage.setScene(scene);
 		newStage.show();
@@ -1281,7 +1284,10 @@ public class Controller implements Initializable {
 		VBox vBox = new VBox(20);
 		vBox.setPrefWidth(300);
 		vBox.setPrefHeight(500);
-		vBox.getChildren().add(new Text(instructionsData));
+		vBox.setMaxWidth(300);
+		Text text = new Text(instructionsData);
+		text.setWrappingWidth(500);
+		vBox.getChildren().add(text);
 		Scene scene = new Scene(vBox);
 		newStage.setScene(scene);
 		newStage.show();

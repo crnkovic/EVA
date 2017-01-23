@@ -1,0 +1,12 @@
+    Ctrl + V                Učitavanje videa
+    Ctrl + F                Učitavanje datoteke sa bilješkama programa
+    Ctrl + G                Učitavanje datoteke sa označenim referentnim oznakama
+    P                       Odaberi prethodni pravokutnik
+    N                       Odaberi sljedeći pravokutnik
+    W,A,S,D                 Pomakni odabrani pravokutnik
+    I,J,K,L                 Prošiti pomaknuti pravokutnik
+    Shift + I,J,K,L         Smanji pomaknuti pravokutnik
+    F                       Povečaj prozor
+    H                       Smanji prozor
+    Shift + W,A,S,D         Pomakni sliku
+

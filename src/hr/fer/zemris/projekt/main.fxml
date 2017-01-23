@@ -52,7 +52,7 @@
             <Menu mnemonicParsing="false" text="Postavke">
                 <MenuItem fx:id="video" mnemonicParsing="false" onAction="#setVideoAndSetUp" text="Odaberite video"/>
                 <MenuItem fx:id="file" mnemonicParsing="false" onAction="#setEvaluationFile" text="Odaberite datoteku s trajektorijama"/>
-                <MenuItem fx:id="gFile" mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku s zabilježenim oznakama"/>
+                <MenuItem fx:id="gFile" mnemonicParsing="false" onAction="#setGroundTruthFile" text="Odaberite datoteku sa zabilježenim oznakama"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Spremanje">
                 <MenuItem mnemonicParsing="false" onAction="#saveFileWithMarks" text="Spremi zabilježene oznake"/>

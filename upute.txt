@@ -1,0 +1,12 @@
+Upute za korištenje
+
+Ovo je kratak opis koraka koje je potrebno napraviti kako bi se uspješno pokrenula evaluacija.
+1. Učitajte video. (Postavke->Odaberite video)
+2. Učitajte datoteku s oznakama koje evaluiramo. (Postavke->Odaberite datoteku s trajektorijama)
+3. Po želji učitajte datoteku za prije zabilježenim oznakama. (Postavke->Odaberite datoteku sa zabilježenim oznakama)
+3. Označite igrače na snimci.(Za ispravne rezultate potrebno je na svakom željenom frame-u označiti sve igrače) Moguće je učitati oznake koje je generirao algoritam te ih urediti i spremiti kao referentne. (Gumb Oznake Generatora)
+4. Stisnite gumb Spremi oznake.
+5. Po želji preselite se na neki drugi frame i ponovite korake 3 i 4
+6. Po želji spremite oznake za kasnije korištenje.
+6. Upišite prag Jaccardovog indexa
+7. Stisnite gumb Evaluacija
