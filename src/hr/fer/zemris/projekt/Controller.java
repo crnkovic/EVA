@@ -283,7 +283,6 @@ public class Controller implements Initializable {
 
 	private void repaintElements() throws IOException, JCodecException {
 
-		System.out.println("1 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 		BufferedImage bufferedImage = getImageForFrame(Integer.parseInt(frameNumberField.getText()));
 		videoHeight = frameHeight * (videoWidth / frameWidth);
 
@@ -315,11 +314,9 @@ public class Controller implements Initializable {
 //		footballFieldImage.setScaleY(affineTransform.getScaleY());
 //		footballFieldImage.setTranslateX(affineTransform.getTranslateX());
 //		footballFieldImage.setTranslateY(affineTransform.getTranslateY());
-		System.out.println("2 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 		footballFieldImage.setImage(image);
 		footballFieldImage.setFitWidth(videoWidth);
 		footballFieldImage.setFitHeight(videoHeight);
-		System.out.println("3 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 		repaintInMotion = true;
 		evaluationMainApp.pack();
 	}
@@ -556,7 +553,6 @@ public class Controller implements Initializable {
 		for (int frameNumber : frameNumbersList) {
 			// Loop through the rectangles for this specific frame and write it to the file
 			for (EditRectangle label : evaluationMainApp.getMarkedFrame(frameNumber)) {
-				System.out.println("frame number:" + frameNumber + " label:" + label);
 				writer.write(frameNumber + "," + label.toString() + System.lineSeparator());
 				writer.flush();
 			}
@@ -945,8 +941,6 @@ public class Controller implements Initializable {
 						return;
 					}
 
-					System.out.println("0 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
-
 					repaint = true;
 					AffineTransform tempTransform = new AffineTransform();
 					tempTransform.concatenate(affineTransform);
@@ -956,18 +950,15 @@ public class Controller implements Initializable {
 					if (affineTransform.getTranslateY() > 0 ) {
 						return;
 					}
-					System.out.println("0 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 					repaint = true;
 					AffineTransform tempTransform = new AffineTransform();
 					tempTransform.concatenate(affineTransform);
 					tempTransform.translate(0, 50);
 					affineTransform = tempTransform;
 				} else if (e.getCode().equals(KeyCode.D)) {
-					System.out.println(videoHeight);
 					if ((-affineTransform.getTranslateX() + DEFAULT_DISPLAY_WIDTH) > frameWidth*affineTransform.getScaleX()) {
 						return;
 					}
-					System.out.println("0 width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 					repaint = true;
 					AffineTransform tempTransform = new AffineTransform();
 					tempTransform.concatenate(affineTransform);
@@ -1065,7 +1056,6 @@ public class Controller implements Initializable {
 			} else if (e.getCode() == KeyCode.N) {
 				if(selectedRectangle != null) {
 					int index = currentFrameRectangles.indexOf(selectedRectangle);
-					System.out.println(currentFrameRectangles.size());
 					selectedRectangle.unSelect();
 					int rectanglesPassed = 0;
 					while (true) {
