@@ -18,7 +18,6 @@ import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -26,14 +25,13 @@ import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -278,7 +276,7 @@ public class Controller implements Initializable {
 
 	private void repaintElements() throws IOException, JCodecException {
 		BufferedImage bufferedImage = getImageForFrame(Integer.parseInt(frameNumberField.getText()));
-		videoHeight = bufferedImage.getHeight() * (videoWidth / bufferedImage.getWidth());
+		videoHeight = frameHeight * (videoWidth / frameWidth);
 
 		Iterator iterator = imagePane.getChildren().iterator();
 		while (iterator.hasNext()) {
@@ -309,6 +307,9 @@ public class Controller implements Initializable {
 //		footballFieldImage.setTranslateX(affineTransform.getTranslateX());
 //		footballFieldImage.setTranslateY(affineTransform.getTranslateY());
 		footballFieldImage.setImage(image);
+		footballFieldImage.setFitWidth(videoWidth);
+		footballFieldImage.setFitHeight(videoHeight);
+		System.out.println("width: " +footballFieldImage.getScene().getWidth() + " height: " +footballFieldImage.getScene().getHeight());
 		repaintInMotion = true;
 		evaluationMainApp.pack();
 	}
