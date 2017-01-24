@@ -45,7 +45,8 @@
             <Button fx:id="saveMarksButton" mnemonicParsing="false" onAction="#saveMarks" prefHeight="18.0"
                     text="Spremi oznake"/>
             <Separator layoutX="882.0" layoutY="10.0" orientation="VERTICAL" prefHeight="33.0" prefWidth="12.0" style="visibility: hidden" />
-            </HBox>
+            <ImageView fx:id="marksSavedIcon"></ImageView>
+        </HBox>
     </bottom>
     <top>
         <MenuBar BorderPane.alignment="CENTER">
