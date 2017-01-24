@@ -9,4 +9,7 @@
     F                       Povečaj prozor
     H                       Smanji prozor
     Shift + W,A,S,D         Pomakni sliku
-
+    T                       Resetiraj uvećanje
+    Ctrl + S                Spremi trenutne oznake za trenutni okvir
+    C/M                     Zoom in/out
+    DELETE                  Briše selektiranu oznaku ili spremljene oznake za odabrani frame

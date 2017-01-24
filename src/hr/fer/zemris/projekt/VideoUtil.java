@@ -39,7 +39,7 @@ public class VideoUtil {
      */
     public static BufferedImage getFrame(String path, int frameNumber) throws IOException, JCodecException {
         return AWTUtil.toBufferedImage(
-                FrameGrab.getNativeFrame(new File(path), frameNumber)
+                FrameGrab.getNativeFrame(new File(path), frameNumber-1)
         );
     }
 }

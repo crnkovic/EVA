@@ -215,7 +215,7 @@ public class Controller implements Initializable {
 		evaluationMainApp.setVideoPath(file.getPath());
 		int numberOfFrames = VideoUtil.getNumberOfFrames(file.getPath());
 
-		BufferedImage bufferedImage = VideoUtil.getFrame(file.getPath(), 0);
+		BufferedImage bufferedImage = VideoUtil.getFrame(file.getPath(), 1);
 		frameWidth=bufferedImage.getWidth();
 		frameHeight=bufferedImage.getHeight();
 		videoHeight = bufferedImage.getHeight() * (videoHeight / bufferedImage.getWidth());
@@ -326,7 +326,7 @@ public class Controller implements Initializable {
 
 	private boolean canShow(EditRectangle scaledRectangle) {
 		if (scaledRectangle.getWidth() + scaledRectangle.getX() < videoWidth && scaledRectangle.getHeight() +
-				scaledRectangle.getY() < videoHeight) {
+				scaledRectangle.getY() < videoHeight && scaledRectangle.getX()>=0 && scaledRectangle.getY()>=0) {
 			return true;
 		}
 		return false;
@@ -352,13 +352,6 @@ public class Controller implements Initializable {
 		repaintElements();
 		setFramesNotSavedIcon();
 
-//		drawnRectangles.addAll(rectangles);
-//
-//		for (EditRectangle rectangle : rectangles) {
-//			DrawingUtil.setDefaultProperties(rectangle);
-//
-//			imagePane.getChildren().add(rectangle);
-//		}
 	}
 
 	/**
@@ -835,6 +828,8 @@ public class Controller implements Initializable {
 			int totalNumberOfFrames = VideoUtil.getNumberOfFrames(evaluationMainApp.getVideoPath());
 			if (broj > totalNumberOfFrames) {
 				broj = totalNumberOfFrames;
+			}else if (broj < 1){
+				broj= 1;
 			}
 
 			frameSlider.setValue(broj);
@@ -913,17 +908,39 @@ public class Controller implements Initializable {
 			if (!evaluationMainApp.isVideoDirSet()) {
 				return;
 			}
-			else if(e.isControlDown() && e.getCode()==KeyCode.S){
-				try {
-					saveMarks(null);
-					return;
-				} catch (IOException e1) {
-					e1.printStackTrace();
+			else if(e.isControlDown()){
+				if(e.getCode()==KeyCode.S) {
+					try {
+						saveMarks(null);
+						return;
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 				}
 			}
 
+			if(e.getCode()==KeyCode.C){
+				AffineTransform tempTransform = new AffineTransform();
+				tempTransform.concatenate(affineTransform);
+				if (affineTransform.getTranslateX() < -(videoWidth * affineTransform.getScaleX() *
+						UNITS_SCROLLED_DECREASE) / 2 || affineTransform.getTranslateY() < -(videoHeight *
+						affineTransform.getScaleY() * UNITS_SCROLLED_DECREASE) / 2) {
+					return;
+				}
+				tempTransform.scale(UNITS_SCROLLED_DECREASE, UNITS_SCROLLED_DECREASE);
+				affineTransform = tempTransform;
+				repaint = true;
+			}else if (e.getCode() ==KeyCode.M){
+				AffineTransform tempTransform = new AffineTransform();
+				tempTransform.concatenate(affineTransform);
+				tempTransform.scale(UNITS_SCROLLED_MAGNIFY, UNITS_SCROLLED_MAGNIFY);
+				affineTransform = tempTransform;
+				repaint = true;
+
+			}
+
 			if (e.isShiftDown()) {
-				if (e.getCode().equals(KeyCode.W)) {
+				if (e.getCode().equals(KeyCode.S)) {
 					if (-affineTransform.getTranslateY()+videoHeight > frameHeight*affineTransform.getScaleX()) {
 						return;
 					}
@@ -935,7 +952,7 @@ public class Controller implements Initializable {
 					tempTransform.concatenate(affineTransform);
 					tempTransform.translate(0, -50);
 					affineTransform = tempTransform;
-				} else if (e.getCode().equals(KeyCode.S)) {
+				} else if (e.getCode().equals(KeyCode.W)) {
 					if (affineTransform.getTranslateY() > 0 ) {
 						return;
 					}
@@ -945,7 +962,7 @@ public class Controller implements Initializable {
 					tempTransform.concatenate(affineTransform);
 					tempTransform.translate(0, 50);
 					affineTransform = tempTransform;
-				} else if (e.getCode().equals(KeyCode.A)) {
+				} else if (e.getCode().equals(KeyCode.D)) {
 					System.out.println(videoHeight);
 					if ((-affineTransform.getTranslateX() + DEFAULT_DISPLAY_WIDTH) > frameWidth*affineTransform.getScaleX()) {
 						return;
@@ -956,7 +973,7 @@ public class Controller implements Initializable {
 					tempTransform.concatenate(affineTransform);
 					tempTransform.translate(-50, 0);
 					affineTransform = tempTransform;
-				} else if (e.getCode().equals(KeyCode.D)) {
+				} else if (e.getCode().equals(KeyCode.A)) {
 					if (affineTransform.getTranslateX() > 0) {
 						return;
 					}
@@ -1011,6 +1028,78 @@ public class Controller implements Initializable {
 				return;
 			}
 
+			if (e.getCode() == KeyCode.P) {
+				if(selectedRectangle != null){
+				int index = currentFrameRectangles.indexOf(selectedRectangle);
+				selectedRectangle.unSelect();
+				int rectanglesPased = 0;
+				while (true) {
+					index--;
+					if (index < 0) {
+						selectedRectangle = currentFrameRectangles.get(currentFrameRectangles.size() - 1);
+						index = currentFrameRectangles.size() - 1;
+					} else {
+						selectedRectangle = currentFrameRectangles.get(index);
+					}
+					if (canShow(scaleRectangle(selectedRectangle))) {
+						break;
+					}
+					rectanglesPased++;
+					if (rectanglesPased == currentFrameRectangles.size()) {
+						return;
+					}
+				}
+				selectedRectangle.select();}else if(currentFrameRectangles.size() > 0){
+					selectedRectangle = currentFrameRectangles.get(0);
+					selectedRectangle.select();
+				}
+				try {
+					repaintElements();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (JCodecException e1) {
+					e1.printStackTrace();
+				}
+				return;
+
+			} else if (e.getCode() == KeyCode.N) {
+				if(selectedRectangle != null) {
+					int index = currentFrameRectangles.indexOf(selectedRectangle);
+					System.out.println(currentFrameRectangles.size());
+					selectedRectangle.unSelect();
+					int rectanglesPassed = 0;
+					while (true) {
+						index++;
+						if (index >= currentFrameRectangles.size()) {
+							selectedRectangle = currentFrameRectangles.get(0);
+							index = 0;
+						} else {
+							selectedRectangle = currentFrameRectangles.get(index);
+						}
+						if (canShow(scaleRectangle(selectedRectangle))) {
+							break;
+						}
+						rectanglesPassed++;
+						if (rectanglesPassed == currentFrameRectangles.size()) {
+							return;
+						}
+					}
+					selectedRectangle.select();
+				}else if(currentFrameRectangles.size()>0){
+					selectedRectangle = currentFrameRectangles.get(currentFrameRectangles.size()-1);
+					selectedRectangle.select();
+				}
+				try {
+					repaintElements();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (JCodecException e1) {
+					e1.printStackTrace();
+				}
+				return;
+			}
+
+
 			if (selectedRectangle == null) {
 				return;
 			}
@@ -1029,53 +1118,6 @@ public class Controller implements Initializable {
 					}
 					selectedRectangle.select();
 				}
-			} else if (e.getCode() == KeyCode.P) {
-
-				int index = currentFrameRectangles.indexOf(selectedRectangle);
-				selectedRectangle.unSelect();
-				int rectanglesPased = 0;
-				while (true) {
-					index--;
-					if (index < 0) {
-						selectedRectangle = currentFrameRectangles.get(currentFrameRectangles.size() - 1);
-						index = currentFrameRectangles.size() - 1;
-					} else {
-						selectedRectangle = currentFrameRectangles.get(index);
-					}
-					if (canShow(scaleRectangle(selectedRectangle))) {
-						break;
-					}
-					rectanglesPased++;
-					if (rectanglesPased == currentFrameRectangles.size()) {
-						System.out.println("tu");
-						return;
-					}
-				}
-				selectedRectangle.select();
-
-			} else if (e.getCode() == KeyCode.N) {
-				int index = currentFrameRectangles.indexOf(selectedRectangle);
-				System.out.println(currentFrameRectangles.size());
-				selectedRectangle.unSelect();
-				int rectanglesPassed = 0;
-				while (true) {
-					index++;
-					if (index >= currentFrameRectangles.size()) {
-						selectedRectangle = currentFrameRectangles.get(0);
-						index = 0;
-					} else {
-						selectedRectangle = currentFrameRectangles.get(index);
-					}
-					if (canShow(scaleRectangle(selectedRectangle))) {
-						break;
-					}
-					rectanglesPassed++;
-					if (rectanglesPassed == currentFrameRectangles.size()) {
-						return;
-					}
-				}
-				selectedRectangle.select();
-
 			} else if (e.isShiftDown()) {
 
 				if (e.getCode().equals(KeyCode.I)) {
@@ -1293,6 +1335,7 @@ public class Controller implements Initializable {
 				// )) {
 				setSelectedFrame(Integer.parseInt(framenumber));
 			}
+			setFramesNotSavedIcon();
 			evaluationMainApp.removeMarkedFrame(Integer.parseInt(framenumber));
 		}
 	}
