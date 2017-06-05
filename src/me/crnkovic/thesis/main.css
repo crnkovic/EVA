@@ -42,14 +42,14 @@
     -fx-background-color: #29a0c8;
 }
 
-#evaluateButton, #loadGeneratedRectangles, #removeAllMarksForCurrentFrame, #resetScalingAndTransformation{
+#evaluateButton, #loadGeneratedRectangles, #removeAllMarksForCurrentFrame, #resetScalingAndTransformation, #detectionButton {
     -fx-background-radius: 0;
     -fx-text-fill: #FFF;
     -fx-background-color: #2196F3;
     -fx-padding: 7 15;
 }
 
-#evaluateButton:hover, #loadGeneratedRectangles:hover, #removeAllMarksForCurrentFrame:hover, #resetScalingAndTransformation:hover{
+#evaluateButton:hover, #loadGeneratedRectangles:hover, #removeAllMarksForCurrentFrame:hover, #resetScalingAndTransformation:hover, #detectionButton:hover {
     -fx-cursor: hand;
     -fx-background-color: #0c83e1;
 }

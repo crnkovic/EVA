@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt;
+package me.crnkovic.thesis;
 
 import javafx.scene.paint.Color;
 

@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt;
+package me.crnkovic.thesis;
 
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FrameGrabber;

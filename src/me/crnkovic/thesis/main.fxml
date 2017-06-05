@@ -17,9 +17,9 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="700" minWidth="-Infinity"
             xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="hr.fer.zemris.projekt.Controller">
+            fx:controller="me.crnkovic.thesis.Controller">
     <left>
         <Pane fx:id="imagePane" style="-fx-padding: 10">
             <ImageView fx:id="footballFieldImage" preserveRatio="true" BorderPane.alignment="CENTER">
@@ -73,42 +73,52 @@
                            AnchorPane.rightAnchor="0.0" text="0.5" />
             </AnchorPane>
 
-            <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="26.0"
+            <Button fx:id="detectionButton" mnemonicParsing="false" onAction="#detection" prefHeight="20"
+                    prefWidth="200.0" text="Detekcija igrača" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets>
+                        <top>5</top>
+                        <bottom>5</bottom>
+                    </Insets>
+                </VBox.margin>
+            </Button>
+
+            <Button fx:id="evaluateButton" mnemonicParsing="false" onAction="#evaluate" prefHeight="20"
                     prefWidth="200.0" text="Evaluacija" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
-                        <top>10</top>
-                        <bottom>10</bottom>
+                        <top>5</top>
+                        <bottom>5</bottom>
                     </Insets>
                 </VBox.margin>
             </Button>
 
-            <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#loadRectanglesFromFile" prefHeight="26.0"
+            <Button fx:id="loadGeneratedRectangles" mnemonicParsing="false" onAction="#loadRectanglesFromFile" prefHeight="20"
                     prefWidth="200.0" text="Oznake generatora" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
-                        <top>10</top>
-                        <bottom>10</bottom>
+                        <top>5</top>
+                        <bottom>5</bottom>
                     </Insets>
                 </VBox.margin>
             </Button>
 
-            <Button fx:id="removeAllMarksForCurrentFrame" mnemonicParsing="false" onAction="#removeAllMarksForCurrentFrame" prefHeight="26.0"
+            <Button fx:id="removeAllMarksForCurrentFrame" mnemonicParsing="false" onAction="#removeAllMarksForCurrentFrame" prefHeight="20"
                     prefWidth="200.0" text="Obriši oznake framea" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
-                        <top>10</top>
-                        <bottom>10</bottom>
+                        <top>5</top>
+                        <bottom>5</bottom>
                     </Insets>
                 </VBox.margin>
             </Button>
 
-            <Button fx:id="resetScalingAndTransformation" mnemonicParsing="false" onAction="#resetScalingAndTransformation" prefHeight="26.0"
+            <Button fx:id="resetScalingAndTransformation" mnemonicParsing="false" onAction="#resetScalingAndTransformation" prefHeight="20"
                     prefWidth="200.0" text="Resetiraj uvećanje" VBox.vgrow="ALWAYS">
                 <VBox.margin>
                     <Insets>
-                        <top>10</top>
-                        <bottom>10</bottom>
+                        <top>5</top>
+                        <bottom>5</bottom>
                     </Insets>
                 </VBox.margin>
             </Button>
