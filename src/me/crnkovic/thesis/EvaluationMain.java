@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.jcodec.api.JCodecException;
+import org.opencv.core.Core;
 
 import java.io.File;
 import java.io.IOException;
@@ -188,6 +189,8 @@ public class EvaluationMain extends Application {
     }
     @Override
     public void start(Stage primaryStage) throws Exception {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
         this.primaryStage= primaryStage;
         primaryStage.setTitle("Aplikacija za evaluaciju");
 

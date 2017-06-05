@@ -24,14 +24,17 @@ import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
@@ -335,13 +338,9 @@ public class Controller implements Initializable {
     }
 
     private boolean canShow(EditRectangle scaledRectangle) {
-        if (scaledRectangle.getWidth() + scaledRectangle.getX() < videoWidth && scaledRectangle.getHeight() +
-                scaledRectangle.getY() < videoHeight && scaledRectangle.getX() >= 0 && scaledRectangle.getY() >= 0) {
-            return true;
-        }
-        return false;
+        return scaledRectangle.getWidth() + scaledRectangle.getX() < videoWidth && scaledRectangle.getHeight() +
+                scaledRectangle.getY() < videoHeight && scaledRectangle.getX() >= 0 && scaledRectangle.getY() >= 0;
     }
-
 
     @FXML
     public void loadRectanglesFromFile() throws IOException, JCodecException {
@@ -534,7 +533,7 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void detection(ActionEvent actionEvent) {
+    public void detection(ActionEvent actionEvent) throws IOException {
         // Make sure video is loaded
         if (!evaluationMainApp.isVideoDirSet()) {
             Message.error("Video nije učitan!", "Molimo učitajte video te pokušajte ponovno.");
@@ -542,7 +541,26 @@ public class Controller implements Initializable {
             return;
         }
 
-        System.out.println(img);
+        String format = "png";
+
+        new File("hsv/").mkdir();
+        File frameFile = new File("hsv/" + System.currentTimeMillis() + ".png");
+        frameFile.createNewFile();
+
+        byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
+        Mat mat = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
+        mat.put(0, 0, data);
+
+        Mat mat1 = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
+
+        Imgproc.cvtColor(mat, mat1, Imgproc.COLOR_RGB2HSV);
+
+        byte[] data1 = new byte[mat1.rows() * mat1.cols() * (int) (mat1.elemSize())];
+        mat1.get(0, 0, data1);
+        BufferedImage image1 = new BufferedImage(mat1.cols(), mat1.rows(), 5);
+        image1.getRaster().setDataElements(0, 0, mat1.cols(), mat1.rows(), data1);
+
+        ImageIO.write(image1, format, frameFile);
     }
 
 
