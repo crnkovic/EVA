@@ -23,14 +23,15 @@ import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacv.FrameGrabber;
 import org.jcodec.api.JCodecException;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.HOGDescriptor;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.font.ImageGraphicAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -541,26 +542,87 @@ public class Controller implements Initializable {
             return;
         }
 
-        String format = "png";
+////
+////        HOGDescriptor hog = new HOGDescriptor();
+////        hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
+////
+////        Mat mat = bufferedImageToMat(img);
+////
+////        MatOfRect foundLocations = new MatOfRect();
+////        MatOfDouble foundWeights = new MatOfDouble();
+////        final Size winStride = new Size(1, 1);
+////        final Size padding = new Size(10, 20);
+////        final Point rectPoint1 = new Point();
+////        final Point rectPoint2 = new Point();
+////        final Scalar rectColor = new Scalar(0, 255, 0);
+////
+////        hog.detectMultiScale(mat, foundLocations, foundWeights, 1.0, winStride, padding, 1.05, 5, false);
+////
+////        if (foundLocations.rows() > 0) {
+////            List<Rect> rectList = foundLocations.toList();
+////
+////            System.out.println(rectList);
+////
+////            for (Rect rect : rectList) {
+////                rectPoint1.x = rect.x;
+////                rectPoint1.y = rect.y;
+////                rectPoint2.x = rect.x + rect.width;
+////                rectPoint2.y = rect.y + rect.height;
+////
+////                Imgproc.rectangle(mat, rectPoint1, rectPoint2, rectColor, 1);
+////            }
+////        }
 
-        new File("hsv/").mkdir();
-        File frameFile = new File("hsv/" + System.currentTimeMillis() + ".png");
-        frameFile.createNewFile();
+        ImgUtil.saveImage(img, "original");
 
-        byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
-        Mat mat = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
-        mat.put(0, 0, data);
+        // Transform BGR image to HSV image
+        Mat originalHSVMat = ImgUtil.newMat(img);
+        Imgproc.cvtColor(ImgUtil.bufferedImageToMat(img), originalHSVMat, Imgproc.COLOR_BGR2HSV);
 
-        Mat mat1 = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
+        // Create binary image from HSV image
+        Mat binaryImage = ImgUtil.newMat(img);
+        Imgproc.threshold(originalHSVMat, binaryImage, 115, 255, Imgproc.THRESH_BINARY);
+        ImgUtil.saveImage(binaryImage, "binary");
 
-        Imgproc.cvtColor(mat, mat1, Imgproc.COLOR_RGB2HSV);
+        // Erode the binary image
+        Mat erodedImage = ImgUtil.newMat(img);
+        Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
+        Imgproc.erode(binaryImage, erodedImage, erodeElement);
+        ImgUtil.saveImage(erodedImage, "eroded");
 
-        byte[] data1 = new byte[mat1.rows() * mat1.cols() * (int) (mat1.elemSize())];
-        mat1.get(0, 0, data1);
-        BufferedImage image1 = new BufferedImage(mat1.cols(), mat1.rows(), 5);
-        image1.getRaster().setDataElements(0, 0, mat1.cols(), mat1.rows(), data1);
+        // Dilate the eroded image
+        Mat dilatedImage = ImgUtil.newMat(img);
+        Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7));
+        Imgproc.dilate(erodedImage, dilatedImage, dilateElement);
+        ImgUtil.saveImage(dilatedImage, "dilated");
 
-        ImageIO.write(image1, format, frameFile);
+        List<Mat> dilatedChannels = new LinkedList<>();
+        Core.split(dilatedImage, dilatedChannels);
+        ImgUtil.saveImage(dilatedChannels.get(0), "dilated_channels_1");
+        ImgUtil.saveImage(dilatedChannels.get(1), "dilated_channels_2");
+        ImgUtil.saveImage(dilatedChannels.get(2), "dilated_channels_3");
+
+        Mat sub = ImgUtil.newMat(img);
+        Core.subtract(dilatedChannels.get(1), dilatedChannels.get(2), sub);
+        Core.subtract(sub, dilatedChannels.get(0), sub);
+        ImgUtil.saveImage(sub, "sub");
+
+        Mat inverted = ImgUtil.newMat(img);
+        Core.bitwise_not(sub, inverted);
+        ImgUtil.saveImage(inverted, "inverted");
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+
+        Imgproc.findContours(inverted, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        if (hierarchy.size().height > 0 && hierarchy.size().width > 0) {
+            for (int idx = 0; idx >= 0; idx = (int) hierarchy.get(0, idx)[0]) {
+                Imgproc.drawContours(dilatedImage, contours, idx, new Scalar(255, 0, 0));
+            }
+        }
+
+        ImgUtil.saveImage(dilatedImage, "contours");
     }
 
 
