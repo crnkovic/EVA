@@ -542,87 +542,64 @@ public class Controller implements Initializable {
             return;
         }
 
-////
-////        HOGDescriptor hog = new HOGDescriptor();
-////        hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
-////
-////        Mat mat = bufferedImageToMat(img);
-////
-////        MatOfRect foundLocations = new MatOfRect();
-////        MatOfDouble foundWeights = new MatOfDouble();
-////        final Size winStride = new Size(1, 1);
-////        final Size padding = new Size(10, 20);
-////        final Point rectPoint1 = new Point();
-////        final Point rectPoint2 = new Point();
-////        final Scalar rectColor = new Scalar(0, 255, 0);
-////
-////        hog.detectMultiScale(mat, foundLocations, foundWeights, 1.0, winStride, padding, 1.05, 5, false);
-////
-////        if (foundLocations.rows() > 0) {
-////            List<Rect> rectList = foundLocations.toList();
-////
-////            System.out.println(rectList);
-////
-////            for (Rect rect : rectList) {
-////                rectPoint1.x = rect.x;
-////                rectPoint1.y = rect.y;
-////                rectPoint2.x = rect.x + rect.width;
-////                rectPoint2.y = rect.y + rect.height;
-////
-////                Imgproc.rectangle(mat, rectPoint1, rectPoint2, rectColor, 1);
-////            }
-////        }
-
-        ImgUtil.saveImage(img, "original");
-
         // Transform BGR image to HSV image
         Mat originalHSVMat = ImgUtil.newMat(img);
         Imgproc.cvtColor(ImgUtil.bufferedImageToMat(img), originalHSVMat, Imgproc.COLOR_BGR2HSV);
 
-        // Create binary image from HSV image
         Mat binaryImage = ImgUtil.newMat(img);
-        Imgproc.threshold(originalHSVMat, binaryImage, 115, 255, Imgproc.THRESH_BINARY);
-        ImgUtil.saveImage(binaryImage, "binary");
+        Core.inRange(originalHSVMat, new Scalar(0, 120, 0), new Scalar(50, 255, 255), binaryImage);
+        ImgUtil.saveImage(binaryImage, "segmentirana_slika");
+
+        Mat fieldOnlyImage = ImgUtil.newMat(img);
+        Imgproc.dilate(binaryImage, fieldOnlyImage, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9)));
+        Imgproc.erode(fieldOnlyImage, fieldOnlyImage, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(20, 20)));
+        ImgUtil.saveImage(fieldOnlyImage, "micanje_igraca");
 
         // Erode the binary image
-        Mat erodedImage = ImgUtil.newMat(img);
-        Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
-        Imgproc.erode(binaryImage, erodedImage, erodeElement);
-        ImgUtil.saveImage(erodedImage, "eroded");
+        Mat erodedBinary = ImgUtil.newMat(img);
+        Imgproc.erode(binaryImage, erodedBinary, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
 
         // Dilate the eroded image
-        Mat dilatedImage = ImgUtil.newMat(img);
-        Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7));
-        Imgproc.dilate(erodedImage, dilatedImage, dilateElement);
-        ImgUtil.saveImage(dilatedImage, "dilated");
+        Mat dilatedBinary = ImgUtil.newMat(img);
+        Imgproc.dilate(erodedBinary, dilatedBinary, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6, 6)));
+        ImgUtil.saveImage(dilatedBinary, "dilated");
 
-        List<Mat> dilatedChannels = new LinkedList<>();
-        Core.split(dilatedImage, dilatedChannels);
-        ImgUtil.saveImage(dilatedChannels.get(0), "dilated_channels_1");
-        ImgUtil.saveImage(dilatedChannels.get(1), "dilated_channels_2");
-        ImgUtil.saveImage(dilatedChannels.get(2), "dilated_channels_3");
+        Mat erodedBinaryFinal = ImgUtil.newMat(img);
+        Imgproc.erode(dilatedBinary, erodedBinaryFinal, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
+        ImgUtil.saveImage(erodedBinaryFinal, "eroded");
 
-        Mat sub = ImgUtil.newMat(img);
-        Core.subtract(dilatedChannels.get(1), dilatedChannels.get(2), sub);
-        Core.subtract(sub, dilatedChannels.get(0), sub);
-        ImgUtil.saveImage(sub, "sub");
+        Mat finalImg = ImgUtil.newMat(img);
+        Core.bitwise_and(fieldOnlyImage, erodedBinaryFinal, finalImg);
+        ImgUtil.saveImage(finalImg, "final");
 
-        Mat inverted = ImgUtil.newMat(img);
-        Core.bitwise_not(sub, inverted);
-        ImgUtil.saveImage(inverted, "inverted");
+
+        Mat zadnja = ImgUtil.newMat(img);
+        Imgproc.erode(finalImg, zadnja, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
+        ImgUtil.saveImage(zadnja, "zadnja");
+
+        Core.bitwise_not(zadnja, zadnja);
+
+        Mat konture = ImgUtil.newMat(img);
+        Imgproc.threshold(zadnja, konture, 127, 255, Imgproc.THRESH_BINARY);
+        ImgUtil.saveImage(konture, "konture");
+
+        Mat kontZadnje = ImgUtil.newMat(img);
+        Core.bitwise_and(konture, fieldOnlyImage, kontZadnje);
+        ImgUtil.saveImage(kontZadnje, "konture_zadnje");
+
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
 
-        Imgproc.findContours(inverted, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(kontZadnje, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
 
         if (hierarchy.size().height > 0 && hierarchy.size().width > 0) {
             for (int idx = 0; idx >= 0; idx = (int) hierarchy.get(0, idx)[0]) {
-                Imgproc.drawContours(dilatedImage, contours, idx, new Scalar(255, 0, 0));
+                Imgproc.drawContours(kontZadnje, contours, idx, new Scalar(0, 255, 0), 2);
             }
         }
 
-        ImgUtil.saveImage(dilatedImage, "contours");
+        ImgUtil.saveImage(kontZadnje, "contours");
     }
 
 

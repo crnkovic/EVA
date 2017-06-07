@@ -15,14 +15,10 @@ public class ImgUtil {
         byte[] data = new byte[original.rows() * original.cols() * (int) (original.elemSize())];
         original.get(0, 0, data);
 
-        BufferedImage image = null;
+        BufferedImage image;
 
-        if (original.channels() > 1) {
-            image = new BufferedImage(original.cols(), original.rows(), BufferedImage.TYPE_3BYTE_BGR);
-        } else {
-            image = new BufferedImage(original.cols(), original.rows(), BufferedImage.TYPE_BYTE_GRAY);
-        }
-
+        int type = original.channels() > 1 ? BufferedImage.TYPE_3BYTE_BGR : BufferedImage.TYPE_BYTE_GRAY;
+        image = new BufferedImage(original.cols(), original.rows(), type);
         image.getRaster().setDataElements(0, 0, original.cols(), original.rows(), data);
 
         return image;
