@@ -27,6 +27,7 @@ import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 import org.opencv.objdetect.HOGDescriptor;
 
 import javax.imageio.ImageIO;
@@ -542,13 +543,15 @@ public class Controller implements Initializable {
             return;
         }
 
+        ImgUtil.saveImage(img, "original");
+
         // Transform BGR image to HSV image
         Mat originalHSVMat = ImgUtil.newMat(img);
         Imgproc.cvtColor(ImgUtil.bufferedImageToMat(img), originalHSVMat, Imgproc.COLOR_BGR2HSV);
 
         Mat binaryImage = ImgUtil.newMat(img);
-        Core.inRange(originalHSVMat, new Scalar(0, 120, 0), new Scalar(50, 255, 255), binaryImage);
-        ImgUtil.saveImage(binaryImage, "segmentirana_slika");
+        Core.inRange(originalHSVMat, new Scalar(0, 110, 0), new Scalar(50, 255, 255), binaryImage);
+        ImgUtil.saveImage(binaryImage, "segmentirana_slika_3");
 
         Mat fieldOnlyImage = ImgUtil.newMat(img);
         Imgproc.dilate(binaryImage, fieldOnlyImage, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9)));
@@ -570,8 +573,6 @@ public class Controller implements Initializable {
 
         Mat finalImg = ImgUtil.newMat(img);
         Core.bitwise_and(fieldOnlyImage, erodedBinaryFinal, finalImg);
-        ImgUtil.saveImage(finalImg, "final");
-
 
         Mat zadnja = ImgUtil.newMat(img);
         Imgproc.erode(finalImg, zadnja, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
@@ -587,19 +588,34 @@ public class Controller implements Initializable {
         Core.bitwise_and(konture, fieldOnlyImage, kontZadnje);
         ImgUtil.saveImage(kontZadnje, "konture_zadnje");
 
-
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
 
         Imgproc.findContours(kontZadnje, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        Mat original = ImgUtil.bufferedImageToMat(img);
+        Imgproc.cvtColor(original, original, Imgproc.COLOR_BGR2RGB);
+
         if (hierarchy.size().height > 0 && hierarchy.size().width > 0) {
+//            MatOfPoint biggest = contours.get(0);
+//
+//            for (int idx = 0; idx >= 0; idx = (int) hierarchy.get(0, idx)[0]) {
+//                if (Imgproc.contourArea(contours.get(idx)) > Imgproc.contourArea(biggest)) {
+//                    biggest = contours.get(idx);
+//                }
+//            }
+//
+//            contours.remove(biggest);
+
             for (int idx = 0; idx >= 0; idx = (int) hierarchy.get(0, idx)[0]) {
-                Imgproc.drawContours(kontZadnje, contours, idx, new Scalar(0, 255, 0), 2);
+
+                Rect rect = Imgproc.boundingRect(contours.get(idx));
+
+                Imgproc.rectangle(original, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(255, 0, 0), 1);
             }
         }
 
-        ImgUtil.saveImage(kontZadnje, "contours");
+        ImgUtil.saveImage(original, "contours");
     }
 
 
